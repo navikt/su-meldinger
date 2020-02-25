@@ -23,8 +23,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_12
 }
 
-val githubUser: String by project
-val githubPassword: String by project
+val githubUser: String? by project
+val githubPassword: String? by project
 
 repositories {
     mavenCentral()
@@ -35,8 +35,8 @@ configure<PublishingExtension> {
         maven {
             url = uri("https://maven.pkg.github.com/navikt/su-meldinger")
             credentials {
-                username = githubUser
-                password = githubPassword
+                username = githubUser ?: System.getenv("GITHUB_USERNAME")
+                password = githubPassword ?: System.getenv("GITHUB_PASSWORD")
             }
         }
     }
