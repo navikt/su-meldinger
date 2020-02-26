@@ -4,6 +4,7 @@ import no.nav.su.meldinger.kafka.KafkaMessage
 import no.nav.su.meldinger.kafka.MessageResolver.Companion.compatible
 import no.nav.su.meldinger.kafka.Topics.SOKNAD_TOPIC
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.json.JSONObject
 
 
 data class NySoknad(
@@ -11,6 +12,12 @@ data class NySoknad(
         val soknadId: String,
         val soknad: String
 ) : KafkaMessage {
+
+    constructor(jsonObject: JSONObject) : this(
+            jsonObject.getString("sakId"),
+            jsonObject.getString("soknadId"),
+            jsonObject.getJSONObject("soknad").toString()
+    )
 
     override fun key() = sakId
     override fun value() = toJson()
@@ -30,8 +37,8 @@ data class NySoknad(
     }
 
     companion object {
-        infix fun compatible(string: String): Boolean {
-            return compatible(NySoknad::class.java, string)
+        infix fun compatible(jsonObject: JSONObject): Boolean {
+            return compatible(NySoknad::class.java, jsonObject)
         }
     }
 }

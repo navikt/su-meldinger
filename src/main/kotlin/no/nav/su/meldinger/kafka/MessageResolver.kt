@@ -4,8 +4,7 @@ import org.json.JSONObject
 
 class MessageResolver {
     companion object {
-        fun <T> compatible(clazz: Class<T>, string: String): Boolean {
-            val jsonObject = JSONObject(string)
+        fun <T> compatible(clazz: Class<T>, jsonObject: JSONObject): Boolean {
             return jsonObject.propertyAmountEquals(clazz) && jsonObject.keySet().all {
                 clazz.hasField(it)
             }
