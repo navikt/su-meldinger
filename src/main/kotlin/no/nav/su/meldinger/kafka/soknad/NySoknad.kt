@@ -9,14 +9,16 @@ import org.json.JSONObject
 
 data class NySoknad(
         val sakId: String,
+        val aktoerId: String,
         val soknadId: String,
         val soknad: String
 ) : KafkaMessage {
 
     constructor(jsonObject: JSONObject) : this(
-            jsonObject.getString("sakId"),
-            jsonObject.getString("soknadId"),
-            jsonObject.getJSONObject("soknad").toString()
+            sakId = jsonObject.getString("sakId"),
+            aktoerId = jsonObject.getString("aktoerId"),
+            soknadId = jsonObject.getString("soknadId"),
+            soknad = jsonObject.getJSONObject("soknad").toString()
     )
 
     override fun key() = sakId

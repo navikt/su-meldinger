@@ -13,6 +13,7 @@ internal class NySoknadTest {
         assertTrue(NySoknad.compatible(JSONObject("""
             {
                 "sakId":"123",
+                "aktoerId":"54321",
                 "soknadId":"123",
                 "soknad":{}
             }
@@ -52,7 +53,7 @@ internal class NySoknadTest {
     @Test
     fun `should produce valid json`() {
         assertDoesNotThrow {
-            JSONObject(NySoknad("sakId", "soknadId", """{"key":"value"}""").value())
+            JSONObject(NySoknad("sakId", "aktoerId", "soknadId", """{"key":"value"}""").value())
         }
     }
 
@@ -60,10 +61,13 @@ internal class NySoknadTest {
     fun `should create from JSONObject`() {
         val nySoknad = NySoknad(JSONObject()
                 .put("sakId", "123")
+                .put("aktoerId", "54321")
                 .put("soknadId", "123")
-                .put("soknad", JSONObject("""{"key":"value"}""")))
+                .put("soknad", JSONObject("""{"key":"value"}"""))
+        )
         assertEquals("123", nySoknad.sakId)
         assertEquals("123", nySoknad.soknadId)
         assertEquals("""{"key":"value"}""", nySoknad.soknad)
+        assertEquals("54321", nySoknad.aktoerId)
     }
 }
