@@ -15,6 +15,7 @@ internal class MessageResolverTest {
         assertTrue(compatible(NySoknad::class.java, JSONObject("""
             {
                 "sakId":"123",
+                "aktoerId":"54321",
                 "soknadId":"123",
                 "soknad":{}
             }
