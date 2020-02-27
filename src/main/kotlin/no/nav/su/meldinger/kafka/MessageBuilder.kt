@@ -1,7 +1,7 @@
 package no.nav.su.meldinger.kafka
 
 import no.nav.su.meldinger.kafka.soknad.NySoknad
-import no.nav.su.meldinger.kafka.soknad.NySoknadHentGsak
+import no.nav.su.meldinger.kafka.soknad.NySoknadMedSkyggesak
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.Headers
@@ -21,9 +21,9 @@ class MessageBuilder {
                             soknad = jsonObject.getJSONObject("soknad").toString()
                     ) as T
                 }
-                NySoknadHentGsak::class.java -> {
+                NySoknadMedSkyggesak::class.java -> {
                     val jsonObject = JSONObject(record.value())
-                    NySoknadHentGsak(
+                    NySoknadMedSkyggesak(
                             sakId = jsonObject.getString("sakId"),
                             aktoerId = jsonObject.getString("aktoerId"),
                             soknadId = jsonObject.getString("soknadId"),
