@@ -4,6 +4,7 @@ import no.nav.su.meldinger.kafka.soknad.NySoknad
 import no.nav.su.meldinger.kafka.soknad.NySoknadHentGsak
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.header.Headers
 import org.json.JSONObject
 
 class MessageBuilder {
@@ -34,12 +35,23 @@ class MessageBuilder {
             }
         }
 
-        inline fun <reified T : KafkaMessage> toProducerRecord(topic: String, instance: T): ProducerRecord<String, String> {
-            return ProducerRecord(topic, instance.key(), instance.value())
-        }
+        inline fun <reified T : KafkaMessage> toProducerRecord(topic: String, instance: T, headers: Map<String, String> = emptyMap()): ProducerRecord<String, String> =
+                ProducerRecord(topic, instance.key(), instance.value()).also { producerRecord ->
+                    headers.forEach { producerRecord.headers().add(it.key, it.value.toByteArray()) }
+                }
 
-        inline fun <reified T : KafkaMessage> compatible(consumerRecord: ConsumerRecord<String, String>, clazz: Class<T>): Boolean {
-            return messageResolver.compatible(consumerRecord, clazz)
-        }
+        inline fun <reified T : KafkaMessage> compatible(consumerRecord: ConsumerRecord<String, String>, clazz: Class<T>) =
+                messageResolver.compatible(consumerRecord, clazz)
     }
+}
+
+fun ConsumerRecord<String, String>.headersAsString(): Map<String, String> = getHeadersAsString(this.headers())
+fun ProducerRecord<String, String>.headersAsString(): Map<String, String> = getHeadersAsString(this.headers())
+
+private fun getHeadersAsString(headers: Headers): MutableMap<String, String> {
+    val map = mutableMapOf<String, String>()
+    headers.forEach {
+        map[it.key()] = String(it.value())
+    }
+    return map
 }
