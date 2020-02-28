@@ -1,6 +1,7 @@
 package no.nav.su.meldinger.kafka
 
 import no.nav.su.meldinger.kafka.soknad.NySoknad
+import no.nav.su.meldinger.kafka.soknad.NySoknadMedJournalId
 import no.nav.su.meldinger.kafka.soknad.NySoknadMedSkyggesak
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -29,6 +30,17 @@ class MessageBuilder {
                             soknadId = jsonObject.getString("soknadId"),
                             soknad = jsonObject.getJSONObject("soknad").toString(),
                             gsakId = jsonObject.getString("gsakId")
+                    ) as T
+                }
+                NySoknadMedJournalId::class.java -> {
+                    val jsonObject = JSONObject(record.value())
+                    NySoknadMedJournalId(
+                        sakId = jsonObject.getString("sakId"),
+                        aktoerId = jsonObject.getString("aktoerId"),
+                        soknadId = jsonObject.getString("soknadId"),
+                        soknad = jsonObject.getJSONObject("soknad").toString(),
+                        gsakId = jsonObject.getString("gsakId"),
+                        journalId = jsonObject.getString("journalId")
                     ) as T
                 }
                 else -> throw RuntimeException("Could not build instance, class: $clazz is unknown to builder")
