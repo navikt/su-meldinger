@@ -36,8 +36,8 @@ configure<PublishingExtension> {
         maven {
             url = uri("https://maven.pkg.github.com/navikt/su-meldinger")
             credentials {
-                username = githubUser ?: System.getenv("GITHUB_USERNAME")
-                password = githubPassword ?: System.getenv("GITHUB_PASSWORD")
+                username = githubUser
+                password = githubPassword
             }
         }
     }
@@ -72,7 +72,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("net.logstash.logback:logstash-logback-encoder:5.2")
     implementation("org.json:json:$orgJsonVersion")
-    implementation("com.google.code.gson:gson:2.8.6")
     implementation("org.apache.kafka:kafka-streams:2.3.0")
 
 
