@@ -36,17 +36,22 @@ internal class NySoknadTest {
                 "soknad": $soknadJson
             }    
         """.trimIndent()
-            ), NySoknad::class.java
+            )
         )
-        assertEquals("123", nySoknad.sakId)
-        assertEquals("54321", nySoknad.aktoerId)
-        assertEquals("123", nySoknad.soknadId)
-        assertEquals(parseString(soknadJson), parseString(nySoknad.soknad))
+
+        when (nySoknad){
+            is NySoknad -> {
+                assertEquals("123", nySoknad.sakId)
+                assertEquals("54321", nySoknad.aktoerId)
+                assertEquals("123", nySoknad.soknadId)
+                assertEquals(parseString(soknadJson), parseString(nySoknad.soknad))
+            }
+        }
     }
 
     @Test
     fun `json serialization`() {
-        assertEquals(parseString(nySoknad.value()), parseString(fromJson(nySoknad.value()).value()))
+        assertEquals(parseString(nySoknad.value()), parseString(fromJson(nySoknad.value())?.value()))
     }
 
 }

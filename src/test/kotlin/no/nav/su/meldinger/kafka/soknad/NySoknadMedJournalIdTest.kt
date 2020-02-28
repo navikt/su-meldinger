@@ -7,12 +7,15 @@ import no.nav.su.meldinger.kafka.soknad.NySoknadMedJournalId.Companion.fromJson
 import no.nav.su.meldinger.kafka.soknadJson
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 
 internal class NySoknadMedJournalIdTest {
 
-    private val nySoknadMedJournalId = NySoknadMedJournalId(sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-        soknad = soknadJson, gsakId = "333", journalId = "444")
+    private val nySoknadMedJournalId = NySoknadMedJournalId(
+        sakId = "123", aktoerId = "1234567891011", soknadId = "222",
+        soknad = soknadJson, gsakId = "333", journalId = "444"
+    )
 
     @Test
     fun `should produce valid json`() {
@@ -23,7 +26,9 @@ internal class NySoknadMedJournalIdTest {
 
     @Test
     fun `should create from builder`() {
-        val soknadFromRecord = fromConsumerRecord(consumerRecord("123", """
+        val soknadFromRecord = fromConsumerRecord(
+            consumerRecord(
+                "123", """
             {
                 "sakId":"123",
                 "aktoerId":"54321",
@@ -32,20 +37,28 @@ internal class NySoknadMedJournalIdTest {
                 "gsakId":"333",
                 "journalId":"444"
             }    
-        """.trimIndent()), NySoknadMedJournalId::class.java)
-        assertEquals("123", soknadFromRecord.sakId)
-        assertEquals("54321", soknadFromRecord.aktoerId)
-        assertEquals("222", soknadFromRecord.soknadId)
-        assertEquals(parseString(soknadJson), parseString(soknadFromRecord.soknad))
-        assertEquals("333", soknadFromRecord.gsakId)
-        assertEquals("444", soknadFromRecord.journalId)
+        """.trimIndent()
+            )
+        )
+
+        when (soknadFromRecord) {
+            is NySoknadMedJournalId -> {
+                assertEquals("123", soknadFromRecord.sakId)
+                assertEquals("54321", soknadFromRecord.aktoerId)
+                assertEquals("222", soknadFromRecord.soknadId)
+                assertEquals(parseString(soknadJson), parseString(soknadFromRecord.soknad))
+                assertEquals("333", soknadFromRecord.gsakId)
+                assertEquals("444", soknadFromRecord.journalId)
+            }
+            else -> fail()
+        }
     }
 
     @Test
-    fun `json serialization`(){
+    fun `json serialization`() {
         assertEquals(
             parseString(nySoknadMedJournalId.value()),
-            parseString(fromJson(nySoknadMedJournalId.value()).value())
+            parseString(fromJson(nySoknadMedJournalId.value())?.value())
         )
     }
 

@@ -3,6 +3,7 @@ package no.nav.su.meldinger.kafka
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.json.JSONObject
 
+@Deprecated("Will be deleted, start using sealed class Soknadmelding instead")
 class MessageResolver {
     fun <T> compatible(consumerRecord: ConsumerRecord<String, String>, clazz: Class<T>): Boolean {
         val jsonObject = JSONObject(consumerRecord.value())

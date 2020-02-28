@@ -3,6 +3,7 @@ package no.nav.su.meldinger.kafka
 import no.nav.su.meldinger.kafka.MessageBuilder.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.MessageBuilder.Companion.toProducerRecord
 import no.nav.su.meldinger.kafka.MessageResolverTest.Companion.consumerRecord
+import no.nav.su.meldinger.kafka.soknad.KafkaMessage
 import no.nav.su.meldinger.kafka.soknad.NySoknad
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
