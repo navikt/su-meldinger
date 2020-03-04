@@ -39,8 +39,7 @@ class NySoknad(
 ) : SoknadMelding() {
     override fun key() = sakId
     override fun value() = toJson()
-    override fun equals(other: Any?): Boolean =
-            other is NySoknad && this.sakId == other.sakId && this.aktoerId == other.aktoerId && this.soknadId == other.soknadId && this.soknad == other.soknad && this.fnr == other.fnr
+    override fun equals(other: Any?): Boolean = other is NySoknad && JSONObject(value()).similar(JSONObject(other.value()))
 
     private fun toJson(): String {
         return """

@@ -64,6 +64,11 @@ internal class NySoknadTest {
                 soknad = soknadJson,
                 fnr = "12345678910"
         ))
+        assertEquals(nySoknad, NySoknad(
+                sakId = "123", aktoerId = "1234567891011", soknadId = "222",
+                soknad = soknadJson.replace("\n", "").replace("\t",""),
+                fnr = "12345678910"
+        ))
         assertNotEquals(nySoknad, NySoknad(
                 sakId = "111", aktoerId = "1234567891011", soknadId = "222",
                 soknad = soknadJson,
