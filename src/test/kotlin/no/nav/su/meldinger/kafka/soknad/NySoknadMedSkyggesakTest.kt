@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test
 internal class NySoknadMedSkyggesakTest {
 
     private val nySoknadMedSkyggesak = NySoknadMedSkyggesak(
-        sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-        soknad = soknadJson, gsakId = "333"
+            sakId = "123", aktoerId = "1234567891011", soknadId = "222",
+            soknad = soknadJson, fnr = "12345678910", gsakId = "333"
     )
 
     @Test
@@ -34,7 +34,8 @@ internal class NySoknadMedSkyggesakTest {
                 "aktoerId":"54321",
                 "soknadId":"123",
                 "soknad":$soknadJson,
-                "gsakId":"111"
+                "gsakId":"111",
+                "fnr":"12345678910"
             }    
         """.trimIndent()
             )
@@ -47,7 +48,7 @@ internal class NySoknadMedSkyggesakTest {
                 assertEquals(parseString(soknadJson), parseString(nySoknadHentGsak.soknad))
                 assertEquals("111", nySoknadHentGsak.gsakId)
             }
-            else -> fail()
+            else -> fail("${nySoknadHentGsak::class}")
         }
     }
 

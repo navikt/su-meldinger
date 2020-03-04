@@ -20,46 +20,55 @@ sealed class SoknadMelding : KafkaMessage {
         internal const val soknadKey = "soknad"
         internal const val gsakIdKey = "gsakId"
         internal const val journalIdKey = "journalId"
+        internal const val fnrKey = "fnr"
+        fun accept(json: String, requiredFields: List<String>, forbiddenFields: List<String>): Boolean {
+            val jsonObject = JSONObject(json)
+            val hasRequiredFields = requiredFields.map { !jsonObject.optString(it).isNullOrEmpty() }.all { it }
+            val hasForbiddenFields = forbiddenFields.map { !jsonObject.optString(it).isNullOrEmpty() }.any { it }
+            return hasRequiredFields && !hasForbiddenFields
+        }
     }
 }
 
 class NySoknad(
-    val sakId: String,
-    val aktoerId: String,
-    val soknadId: String,
-    val soknad: String
+        val sakId: String,
+        val aktoerId: String,
+        val soknadId: String,
+        val soknad: String,
+        val fnr: String
 ) : SoknadMelding() {
     override fun key() = sakId
     override fun value() = toJson()
+    override fun equals(other: Any?): Boolean =
+            other is NySoknad && this.sakId == other.sakId && this.aktoerId == other.aktoerId && this.soknadId == other.soknadId && this.soknad == other.soknad && this.fnr == other.fnr
+
     private fun toJson(): String {
         return """
             {
                 "$sakIdKey":"$sakId",
                 "$aktoerIdKey":"$aktoerId",
                 "$soknadIdKey":"$soknadId",
-                "$soknadKey":$soknad
+                "$soknadKey":$soknad,
+                "$fnrKey":"$fnr"
             }
         """.trimIndent()
     }
 
     companion object : Visitor<NySoknad> {
-        override fun accept(json: String): Boolean {
-            val jsonObject = JSONObject(json)
-            return !jsonObject.optString(sakIdKey).isNullOrEmpty()
-                && !jsonObject.optString(aktoerIdKey).isNullOrEmpty()
-                && !jsonObject.optString(soknadIdKey).isNullOrEmpty()
-                && !jsonObject.optJSONObject(soknadKey).isEmpty
-        }
+        val requiredFields = listOf(sakIdKey, aktoerIdKey, soknadIdKey, soknadKey, fnrKey)
+        val forbiddenFields = listOf(gsakIdKey)
+        override fun accept(json: String): Boolean = accept(json, requiredFields, forbiddenFields)
 
         override fun fromJson(json: String): NySoknad? {
             return if (accept(json)) {
-            val jsonObject = JSONObject(json)
-            NySoknad(
-                sakId = jsonObject.getString(sakIdKey),
-                aktoerId = jsonObject.getString(aktoerIdKey),
-                soknadId = jsonObject.getString(soknadIdKey),
-                soknad = jsonObject.getJSONObject(soknadKey).toString()
-            )
+                val jsonObject = JSONObject(json)
+                NySoknad(
+                        sakId = jsonObject.getString(sakIdKey),
+                        aktoerId = jsonObject.getString(aktoerIdKey),
+                        soknadId = jsonObject.getString(soknadIdKey),
+                        soknad = jsonObject.getJSONObject(soknadKey).toString(),
+                        fnr = jsonObject.getString(fnrKey)
+                )
             } else {
                 null
             }
@@ -69,11 +78,12 @@ class NySoknad(
 }
 
 class NySoknadMedSkyggesak(
-    val sakId: String,
-    val aktoerId: String,
-    val soknadId: String,
-    val soknad: String,
-    val gsakId: String
+        val sakId: String,
+        val aktoerId: String,
+        val soknadId: String,
+        val soknad: String,
+        val fnr: String,
+        val gsakId: String
 ) : SoknadMelding() {
     override fun key(): String = sakId
     override fun value(): String = toJson()
@@ -84,26 +94,27 @@ class NySoknadMedSkyggesak(
                 "$aktoerIdKey":"$aktoerId",
                 "$soknadIdKey":"$soknadId",
                 "$soknadKey":$soknad,
+                "$fnrKey":"$fnr",
                 "$gsakIdKey":"$gsakId"
             }
         """.trimIndent()
     }
 
     companion object : Visitor<NySoknadMedSkyggesak> {
-        override fun accept(json: String): Boolean {
-            return NySoknad.accept(json)
-                && !JSONObject(json).optString(gsakIdKey).isNullOrEmpty()
-        }
+        val requiredFields = NySoknad.requiredFields + gsakIdKey
+        val forbiddenFields = listOf(journalIdKey)
+        override fun accept(json: String): Boolean = accept(json, requiredFields, forbiddenFields)
 
         override fun fromJson(json: String): NySoknadMedSkyggesak? {
             return if (accept(json)) {
                 val jsonObject = JSONObject(json)
                 NySoknadMedSkyggesak(
-                    sakId = jsonObject.getString(sakIdKey),
-                    aktoerId = jsonObject.getString(aktoerIdKey),
-                    soknadId = jsonObject.getString(soknadIdKey),
-                    soknad = jsonObject.getJSONObject(soknadKey).toString(),
-                    gsakId = jsonObject.getString(gsakIdKey).toString()
+                        sakId = jsonObject.getString(sakIdKey),
+                        aktoerId = jsonObject.getString(aktoerIdKey),
+                        soknadId = jsonObject.getString(soknadIdKey),
+                        soknad = jsonObject.getJSONObject(soknadKey).toString(),
+                        fnr = jsonObject.getString(fnrKey),
+                        gsakId = jsonObject.getString(gsakIdKey).toString()
                 )
             } else {
                 null
@@ -113,12 +124,13 @@ class NySoknadMedSkyggesak(
 }
 
 class NySoknadMedJournalId(
-    val sakId: String,
-    val aktoerId: String,
-    val soknadId: String,
-    val soknad: String,
-    val gsakId: String,
-    val journalId: String
+        val sakId: String,
+        val aktoerId: String,
+        val soknadId: String,
+        val soknad: String,
+        val fnr: String,
+        val gsakId: String,
+        val journalId: String
 ) : SoknadMelding() {
     override fun key(): String = sakId
     override fun value(): String = toJson()
@@ -129,6 +141,7 @@ class NySoknadMedJournalId(
                 "$aktoerIdKey":"$aktoerId",
                 "$soknadIdKey":"$soknadId",
                 "$soknadKey":$soknad,
+                "$fnrKey":"$fnr",
                 "$gsakIdKey":"$gsakId",
                 "$journalIdKey":"$journalId"
             }
@@ -136,21 +149,21 @@ class NySoknadMedJournalId(
     }
 
     companion object : Visitor<NySoknadMedJournalId> {
-        override fun accept(json: String): Boolean {
-            return NySoknadMedSkyggesak.accept(json)
-                && !JSONObject(json).optString(journalIdKey).isNullOrEmpty()
-        }
+        val requiredFields = NySoknadMedSkyggesak.requiredFields + journalIdKey
+        val forbiddenFields = emptyList<String>()
+        override fun accept(json: String): Boolean = accept(json, requiredFields, forbiddenFields)
 
         override fun fromJson(json: String): NySoknadMedJournalId? {
             return if (accept(json)) {
                 val jsonObject = JSONObject(json)
                 NySoknadMedJournalId(
-                    sakId = jsonObject.getString(sakIdKey),
-                    aktoerId = jsonObject.getString(aktoerIdKey),
-                    soknadId = jsonObject.getString(soknadIdKey),
-                    soknad = jsonObject.getJSONObject(soknadKey).toString(),
-                    gsakId = jsonObject.getString(gsakIdKey).toString(),
-                    journalId = jsonObject.getString(journalIdKey).toString()
+                        sakId = jsonObject.getString(sakIdKey),
+                        aktoerId = jsonObject.getString(aktoerIdKey),
+                        soknadId = jsonObject.getString(soknadIdKey),
+                        soknad = jsonObject.getJSONObject(soknadKey).toString(),
+                        fnr = jsonObject.getString(fnrKey),
+                        gsakId = jsonObject.getString(gsakIdKey).toString(),
+                        journalId = jsonObject.getString(journalIdKey).toString()
                 )
             } else {
                 null

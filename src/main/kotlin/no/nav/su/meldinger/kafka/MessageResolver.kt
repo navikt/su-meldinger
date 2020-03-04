@@ -14,7 +14,7 @@ class MessageResolver {
 
     private fun <T> JSONObject.propertyAmountEquals(clazz: Class<T>): Boolean {
         return this.keySet().size == clazz.declaredFields.filter {
-            it.name != "Companion" //Remove companion members from comparison
+            it.name != "Companion" && it.name != "requiredFields" && it.name != "forbiddenFields" //Remove companion members from comparison
         }.size
     }
 

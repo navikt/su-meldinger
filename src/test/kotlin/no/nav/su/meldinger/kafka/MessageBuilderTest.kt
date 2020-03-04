@@ -21,12 +21,12 @@ internal class MessageBuilderTest {
     fun `should create producer record with headers`() {
         val producerRecord1 = toProducerRecord(
                 "TOPIC",
-                NySoknad("sakId", "aktoerId", "soknadId", "{}"))
+                NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr"))
         assertEquals(0, producerRecord1.headers().count())
 
         val producerRecord2 = toProducerRecord(
                 "TOPIC",
-                NySoknad("sakId", "aktoerId", "soknadId", "{}"),
+                NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr"),
                 mapOf("X-Correlation-ID" to "abcdef"))
         assertEquals(1, producerRecord2.headers().count())
         assertEquals("abcdef", producerRecord2.headersAsString()["X-Correlation-ID"])

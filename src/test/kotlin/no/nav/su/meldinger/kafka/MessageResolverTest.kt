@@ -17,7 +17,8 @@ internal class MessageResolverTest {
                 "sakId":"123",
                 "aktoerId":"54321",
                 "soknadId":"123",
-                "soknad":{}
+                "soknad":{"key":"value"},
+                "fnr":"12345678910"
             }
         """.trimIndent()), NySoknad::class.java))
     }
