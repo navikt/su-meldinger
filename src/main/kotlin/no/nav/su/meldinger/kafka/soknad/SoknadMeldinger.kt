@@ -7,13 +7,10 @@ import org.json.JSONObject
 interface KafkaMessage {
     fun key(): String
     fun value(): String
-
-    companion object {
-        fun KafkaMessage.toProducerRecord(topic: String, headers: Map<String, String> = emptyMap()): ProducerRecord<String, String> =
-                ProducerRecord(topic, key(), value()).also { record ->
-                    headers.forEach { record.headers().add(it.key, it.value.toByteArray()) }
-                }
-    }
+    fun toProducerRecord(topic: String, headers: Map<String, String> = emptyMap()): ProducerRecord<String, String> =
+        ProducerRecord(topic, key(), value()).also { record ->
+            headers.forEach { record.headers().add(it.key, it.value.toByteArray()) }
+        }
 }
 
 interface Visitor<T> {

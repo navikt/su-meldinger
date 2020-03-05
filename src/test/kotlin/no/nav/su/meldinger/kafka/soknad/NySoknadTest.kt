@@ -3,7 +3,6 @@ package no.nav.su.meldinger.kafka.soknad
 import com.google.gson.JsonParser.parseString
 import no.nav.su.meldinger.kafka.consumerRecord
 import no.nav.su.meldinger.kafka.headersAsString
-import no.nav.su.meldinger.kafka.soknad.KafkaMessage.Companion.toProducerRecord
 import no.nav.su.meldinger.kafka.soknad.NySoknad.Companion.fromJson
 import no.nav.su.meldinger.kafka.soknad.SoknadMelding.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.soknadJson
