@@ -67,6 +67,8 @@ class NySøknad(
         """.trimIndent()
     }
 
+    fun medSkyggesak(gsakId: String) = NySøknadMedSkyggesak(sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, gsakId = gsakId)
+
     companion object : Visitor<NySøknad> {
         val requiredFields = listOf(sakIdKey, aktørIdKey, søknadIdKey, søknadKey, fnrKey)
         val forbiddenFields = listOf(gsakIdKey)
@@ -112,6 +114,8 @@ class NySøknadMedSkyggesak(
             }
         """.trimIndent()
     }
+
+    fun medJournalId(journalId: String) = NySøknadMedJournalId(sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, gsakId = gsakId, journalId = journalId)
 
     companion object : Visitor<NySøknadMedSkyggesak> {
         val requiredFields = NySøknad.requiredFields + gsakIdKey
