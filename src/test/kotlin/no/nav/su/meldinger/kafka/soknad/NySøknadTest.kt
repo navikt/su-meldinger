@@ -3,71 +3,71 @@ package no.nav.su.meldinger.kafka.soknad
 import com.google.gson.JsonParser.parseString
 import no.nav.su.meldinger.kafka.consumerRecord
 import no.nav.su.meldinger.kafka.headersAsString
-import no.nav.su.meldinger.kafka.soknad.NySoknad.Companion.fromJson
-import no.nav.su.meldinger.kafka.soknad.SoknadMelding.Companion.fromConsumerRecord
-import no.nav.su.meldinger.kafka.soknadJson
+import no.nav.su.meldinger.kafka.soknad.NySøknad.Companion.fromJson
+import no.nav.su.meldinger.kafka.soknad.SøknadMelding.Companion.fromConsumerRecord
+import no.nav.su.meldinger.kafka.søknadJson
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 
-internal class NySoknadTest {
+internal class NySøknadTest {
 
-    private val nySoknad = NySoknad(
-            sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-            soknad = soknadJson,
+    private val nySøknad = NySøknad(
+            sakId = "123", aktørId = "1234567891011", søknadId = "222",
+            søknad = søknadJson,
             fnr = "12345678910"
     )
 
     @Test
     fun `should produce valid json`() {
         assertDoesNotThrow {
-            JSONObject(nySoknad.value())
+            JSONObject(nySøknad.value())
         }
     }
 
     @Test
     fun `should create from consumer record`() {
-        val nySoknad = fromConsumerRecord(
+        val nySøknad = fromConsumerRecord(
                 consumerRecord("123", """
             {
                 "sakId":"123",
-                "aktoerId":"54321",
-                "soknadId":"123",
-                "soknad": $soknadJson,
+                "aktørId":"54321",
+                "søknadId":"123",
+                "søknad": $søknadJson,
                 "fnr":"12345678910"
             }    
         """.trimIndent()))
 
-        when (nySoknad) {
-            is NySoknad -> {
-                assertEquals("123", nySoknad.sakId)
-                assertEquals("54321", nySoknad.aktoerId)
-                assertEquals("123", nySoknad.soknadId)
-                assertEquals(parseString(soknadJson), parseString(nySoknad.soknad))
-                assertEquals("12345678910", nySoknad.fnr)
+        when (nySøknad) {
+            is NySøknad -> {
+                assertEquals("123", nySøknad.sakId)
+                assertEquals("54321", nySøknad.aktørId)
+                assertEquals("123", nySøknad.søknadId)
+                assertEquals(parseString(søknadJson), parseString(nySøknad.søknad))
+                assertEquals("12345678910", nySøknad.fnr)
             }
         }
     }
 
     @Test
     fun `should accept its own json`() {
-        assertTrue(NySoknad.accept(nySoknad.value()))
+        assertTrue(NySøknad.accept(nySøknad.value()))
     }
 
     @Test
     fun `json serialization`() {
-        assertEquals(parseString(nySoknad.value()), parseString(fromJson(nySoknad.value())?.value()))
+        assertEquals(parseString(nySøknad.value()), parseString(fromJson(nySøknad.value())?.value()))
     }
 
     @Test
     fun `should add headers`() {
-        val producerRecord1 = NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr")
+        val producerRecord1 = NySøknad("sakId", "aktørId", "søknadId", "{}", "fnr")
                 .toProducerRecord("TOPIC")
         assertEquals(0, producerRecord1.headers().count())
 
-        val producerRecord2 = NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr")
+        val producerRecord2 = NySøknad("sakId", "aktørId", "søknadId", "{}", "fnr")
                 .toProducerRecord("TOPDIC", mapOf("X-Correlation-ID" to "abcdef"))
         assertEquals(1, producerRecord2.headers().count())
         assertEquals("abcdef", producerRecord2.headersAsString()["X-Correlation-ID"])

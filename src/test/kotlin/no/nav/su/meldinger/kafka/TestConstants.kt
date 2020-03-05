@@ -6,7 +6,7 @@ fun consumerRecord(key: String, value: String): ConsumerRecord<String, String> {
     return ConsumerRecord("", 0, 0, key, value)
 }
 
-val soknadJson =
+val søknadJson =
         """
     {
       "personopplysninger": {

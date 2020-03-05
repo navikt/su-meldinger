@@ -1,19 +1,19 @@
 package no.nav.su.meldinger.kafka.soknad
 
 import no.nav.su.meldinger.kafka.consumerRecord
-import no.nav.su.meldinger.kafka.soknad.SoknadMelding.Companion.fromConsumerRecord
+import no.nav.su.meldinger.kafka.soknad.SøknadMelding.Companion.fromConsumerRecord
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 
-internal class UkjentSoknadFormatTest {
+internal class UkjentSøknadFormatTest {
 
     private val ukjentFormat = UkjentFormat(key = "123",
             json = """
             {
                 "sakId":"123",
-                "aktoerId":"54321"
+                "aktørId":"54321"
             }    
         """.trimIndent()
     )
@@ -27,17 +27,13 @@ internal class UkjentSoknadFormatTest {
 
     @Test
     fun `should create from consumer record`() {
-        val json = """{"sakId":"222","aktoerId":"54321"}"""
-        val soknad = fromConsumerRecord(
-                consumerRecord("123",
-                        json
-                )
-        )
+        val json = """{"sakId":"222","aktørId":"54321"}"""
+        val søknad = fromConsumerRecord(consumerRecord("123", json))
 
-        when (soknad) {
+        when (søknad) {
             is UkjentFormat -> {
-                assertEquals("123", soknad.key())
-                assertEquals(json, soknad.value())
+                assertEquals("123", søknad.key())
+                assertEquals(json, søknad.value())
             }
         }
     }
