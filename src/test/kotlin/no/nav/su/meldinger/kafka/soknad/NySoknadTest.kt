@@ -1,9 +1,11 @@
 package no.nav.su.meldinger.kafka.soknad
 
 import com.google.gson.JsonParser.parseString
-import no.nav.su.meldinger.kafka.MessageBuilder.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.consumerRecord
+import no.nav.su.meldinger.kafka.headersAsString
+import no.nav.su.meldinger.kafka.soknad.KafkaMessage.Companion.toProducerRecord
 import no.nav.su.meldinger.kafka.soknad.NySoknad.Companion.fromJson
+import no.nav.su.meldinger.kafka.soknad.SoknadMelding.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.soknadJson
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.*
@@ -55,7 +57,7 @@ internal class NySoknadTest {
     }
 
     @Test
-    fun `equals`() {
+    fun equals() {
         assertEquals(nySoknad, NySoknad(
                 sakId = "123", aktoerId = "1234567891011", soknadId = "222",
                 soknad = soknadJson,
@@ -98,6 +100,18 @@ internal class NySoknadTest {
     @Test
     fun `json serialization`() {
         assertEquals(parseString(nySoknad.value()), parseString(fromJson(nySoknad.value())?.value()))
+    }
+
+    @Test
+    fun `should add headers`(){
+        val producerRecord1 = NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr")
+                .toProducerRecord("TOPIC")
+        assertEquals(0, producerRecord1.headers().count())
+
+        val producerRecord2 = NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr")
+                .toProducerRecord("TOPDIC", mapOf("X-Correlation-ID" to "abcdef"))
+        assertEquals(1, producerRecord2.headers().count())
+        assertEquals("abcdef", producerRecord2.headersAsString()["X-Correlation-ID"])
     }
 
 }

@@ -1,10 +1,19 @@
 package no.nav.su.meldinger.kafka.soknad
 
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.json.JSONObject
 
 interface KafkaMessage {
     fun key(): String
     fun value(): String
+
+    companion object {
+        fun KafkaMessage.toProducerRecord(topic: String, headers: Map<String, String> = emptyMap()): ProducerRecord<String, String> =
+                ProducerRecord(topic, key(), value()).also { record ->
+                    headers.forEach { record.headers().add(it.key, it.value.toByteArray()) }
+                }
+    }
 }
 
 interface Visitor<T> {
@@ -27,6 +36,12 @@ sealed class SoknadMelding : KafkaMessage {
             val hasForbiddenFields = forbiddenFields.map { !jsonObject.optString(it).isNullOrEmpty() }.any { it }
             return hasRequiredFields && !hasForbiddenFields
         }
+
+        fun fromConsumerRecord(record: ConsumerRecord<String, String>): SoknadMelding =
+                NySoknadMedJournalId.fromJson(record.value())
+                        ?: NySoknadMedSkyggesak.fromJson(record.value())
+                        ?: NySoknad.fromJson(record.value())
+                        ?: UkjentFormat(record.key(), record.value())
     }
 }
 

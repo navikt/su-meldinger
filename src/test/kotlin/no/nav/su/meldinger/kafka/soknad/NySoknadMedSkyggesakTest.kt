@@ -1,9 +1,9 @@
 package no.nav.su.meldinger.kafka.soknad
 
 import com.google.gson.JsonParser.parseString
-import no.nav.su.meldinger.kafka.MessageBuilder.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.consumerRecord
 import no.nav.su.meldinger.kafka.soknad.NySoknadMedSkyggesak.Companion.fromJson
+import no.nav.su.meldinger.kafka.soknad.SoknadMelding.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.soknadJson
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
