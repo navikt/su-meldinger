@@ -8,13 +8,14 @@ import no.nav.su.meldinger.kafka.soknad.NySoknad.Companion.fromJson
 import no.nav.su.meldinger.kafka.soknad.SoknadMelding.Companion.fromConsumerRecord
 import no.nav.su.meldinger.kafka.soknadJson
 import org.json.JSONObject
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 
 internal class NySoknadTest {
 
-    val nySoknad = NySoknad(
+    private val nySoknad = NySoknad(
             sakId = "123", aktoerId = "1234567891011", soknadId = "222",
             soknad = soknadJson,
             fnr = "12345678910"
@@ -28,7 +29,7 @@ internal class NySoknadTest {
     }
 
     @Test
-    fun `should create from builder`() {
+    fun `should create from consumer record`() {
         val nySoknad = fromConsumerRecord(
                 consumerRecord("123", """
             {
@@ -57,53 +58,12 @@ internal class NySoknadTest {
     }
 
     @Test
-    fun equals() {
-        assertEquals(nySoknad, NySoknad(
-                sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-                soknad = soknadJson,
-                fnr = "12345678910"
-        ))
-        assertEquals(nySoknad, NySoknad(
-                sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-                soknad = soknadJson.replace("\n", "").replace("\t", ""),
-                fnr = "12345678910"
-        ))
-        assertNotEquals(nySoknad, NySoknad(
-                sakId = "111", aktoerId = "1234567891011", soknadId = "222",
-                soknad = soknadJson,
-                fnr = "12345678910")
-        )
-        assertNotEquals(nySoknad, NySoknad(
-                sakId = "123", aktoerId = "1112312412515", soknadId = "222",
-                soknad = soknadJson,
-                fnr = "12345678910"
-        ))
-        assertNotEquals(nySoknad, NySoknad(
-                sakId = "123", aktoerId = "1234567891011", soknadId = "111",
-                soknad = soknadJson,
-                fnr = "12345678910"
-        ))
-        assertNotEquals(nySoknad, NySoknad(
-                sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-                soknad = """{"key":"value"}""",
-                fnr = "12345678910"
-        ))
-        assertNotEquals(nySoknad, NySoknad(
-                sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-                soknad = soknadJson,
-                fnr = "01987654321"
-        ))
-        assertNotEquals(nySoknad, null)
-
-    }
-
-    @Test
     fun `json serialization`() {
         assertEquals(parseString(nySoknad.value()), parseString(fromJson(nySoknad.value())?.value()))
     }
 
     @Test
-    fun `should add headers`(){
+    fun `should add headers`() {
         val producerRecord1 = NySoknad("sakId", "aktoerId", "soknadId", "{}", "fnr")
                 .toProducerRecord("TOPIC")
         assertEquals(0, producerRecord1.headers().count())

@@ -43,6 +43,10 @@ sealed class SoknadMelding : KafkaMessage {
                         ?: NySoknad.fromJson(record.value())
                         ?: UkjentFormat(record.key(), record.value())
     }
+
+    override fun toString(): String = "class: ${this::class.java.simpleName}, key: ${key()}, value: ${value()}"
+    override fun equals(other: Any?): Boolean = other is SoknadMelding && this::class == other::class && JSONObject(value()).similar(JSONObject(other.value()))
+    override fun hashCode(): Int = key().hashCode() + 31 * value().hashCode()
 }
 
 class NySoknad(
@@ -54,8 +58,6 @@ class NySoknad(
 ) : SoknadMelding() {
     override fun key() = sakId
     override fun value() = toJson()
-    override fun equals(other: Any?): Boolean = other is NySoknad && JSONObject(value()).similar(JSONObject(other.value()))
-
     private fun toJson(): String {
         return """
             {

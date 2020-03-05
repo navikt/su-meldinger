@@ -9,7 +9,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 
 internal class UkjentSoknadFormatTest {
 
-    val ukjentFormat = UkjentFormat(key = "123",
+    private val ukjentFormat = UkjentFormat(key = "123",
             json = """
             {
                 "sakId":"123",
@@ -26,7 +26,7 @@ internal class UkjentSoknadFormatTest {
     }
 
     @Test
-    fun `should create from builder`() {
+    fun `should create from consumer record`() {
         val json = """{"sakId":"222","aktoerId":"54321"}"""
         val soknad = fromConsumerRecord(
                 consumerRecord("123",

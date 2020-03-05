@@ -25,7 +25,7 @@ internal class NySoknadMedSkyggesakTest {
     }
 
     @Test
-    fun `should create from builder`() {
+    fun `should create from consumer record`() {
         val nySoknadHentGsak = fromConsumerRecord(
                 consumerRecord("123", """
             {
