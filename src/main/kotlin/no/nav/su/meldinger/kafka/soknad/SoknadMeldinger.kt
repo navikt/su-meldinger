@@ -188,8 +188,8 @@ class NySoknadMedJournalId(
     }
 }
 
-class UkjentFormat(private val key: String, private val json: String) : SoknadMelding() {
-    override fun key() = key
-    override fun value(): String = json
+class UkjentFormat(private val key: String?, private val json: String?) : SoknadMelding() {
+    override fun key(): String = key ?: "mangler nøkkel"
+    override fun value(): String = json ?: "mangler innhold"
 }
 
