@@ -2,7 +2,7 @@ package no.nav.su.meldinger.kafka.soknad
 
 import com.google.gson.JsonParser.parseString
 import no.nav.su.meldinger.kafka.MessageBuilder.Companion.fromConsumerRecord
-import no.nav.su.meldinger.kafka.MessageResolverTest.Companion.consumerRecord
+import no.nav.su.meldinger.kafka.consumerRecord
 import no.nav.su.meldinger.kafka.soknad.NySoknadMedSkyggesak.Companion.fromJson
 import no.nav.su.meldinger.kafka.soknadJson
 import org.json.JSONObject
@@ -27,8 +27,7 @@ internal class NySoknadMedSkyggesakTest {
     @Test
     fun `should create from builder`() {
         val nySoknadHentGsak = fromConsumerRecord(
-            consumerRecord(
-                "123", """
+                consumerRecord("123", """
             {
                 "sakId":"123",
                 "aktoerId":"54321",
@@ -37,10 +36,9 @@ internal class NySoknadMedSkyggesakTest {
                 "gsakId":"111",
                 "fnr":"12345678910"
             }    
-        """.trimIndent()
-            )
-        )
-        when (nySoknadHentGsak){
+        """.trimIndent()))
+
+        when (nySoknadHentGsak) {
             is NySoknadMedSkyggesak -> {
                 assertEquals("123", nySoknadHentGsak.sakId)
                 assertEquals("54321", nySoknadHentGsak.aktoerId)
@@ -55,8 +53,8 @@ internal class NySoknadMedSkyggesakTest {
     @Test
     fun `json serialization`() {
         assertEquals(
-            parseString(nySoknadMedSkyggesak.value()),
-            parseString(fromJson(nySoknadMedSkyggesak.value())?.value())
+                parseString(nySoknadMedSkyggesak.value()),
+                parseString(fromJson(nySoknadMedSkyggesak.value())?.value())
         )
     }
 

@@ -2,7 +2,7 @@ package no.nav.su.meldinger.kafka.soknad
 
 import com.google.gson.JsonParser.parseString
 import no.nav.su.meldinger.kafka.MessageBuilder.Companion.fromConsumerRecord
-import no.nav.su.meldinger.kafka.MessageResolverTest.Companion.consumerRecord
+import no.nav.su.meldinger.kafka.consumerRecord
 import no.nav.su.meldinger.kafka.soknad.NySoknad.Companion.fromJson
 import no.nav.su.meldinger.kafka.soknadJson
 import org.json.JSONObject
@@ -28,8 +28,7 @@ internal class NySoknadTest {
     @Test
     fun `should create from builder`() {
         val nySoknad = fromConsumerRecord(
-                consumerRecord(
-                        "123", """
+                consumerRecord("123", """
             {
                 "sakId":"123",
                 "aktoerId":"54321",
@@ -37,9 +36,7 @@ internal class NySoknadTest {
                 "soknad": $soknadJson,
                 "fnr":"12345678910"
             }    
-        """.trimIndent()
-                )
-        )
+        """.trimIndent()))
 
         when (nySoknad) {
             is NySoknad -> {
@@ -53,7 +50,7 @@ internal class NySoknadTest {
     }
 
     @Test
-    fun `should accept its own json`(){
+    fun `should accept its own json`() {
         assertTrue(NySoknad.accept(nySoknad.value()))
     }
 
@@ -66,7 +63,7 @@ internal class NySoknadTest {
         ))
         assertEquals(nySoknad, NySoknad(
                 sakId = "123", aktoerId = "1234567891011", soknadId = "222",
-                soknad = soknadJson.replace("\n", "").replace("\t",""),
+                soknad = soknadJson.replace("\n", "").replace("\t", ""),
                 fnr = "12345678910"
         ))
         assertNotEquals(nySoknad, NySoknad(
