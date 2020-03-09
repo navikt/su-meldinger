@@ -32,8 +32,10 @@ internal class NySøknadTest {
 
     @Test
     fun `should create from consumer record`() {
+        val correlationId = "correlationId"
         val nySøknad = fromConsumerRecord(
-                consumerRecord("123", """
+            consumerRecord(
+                "123", """
             {
                 "sakId":"123",
                 "aktørId":"54321",
@@ -41,7 +43,10 @@ internal class NySøknadTest {
                 "søknad": $søknadJson,
                 "fnr":"12345678910"
             }    
-        """.trimIndent()))
+        """.trimIndent(),
+                correlationId
+            )
+        )
 
         when (nySøknad) {
             is NySøknad -> {
@@ -50,6 +55,7 @@ internal class NySøknadTest {
                 assertEquals("123", nySøknad.søknadId)
                 assertEquals(parseString(søknadJson), parseString(nySøknad.søknad))
                 assertEquals("12345678910", nySøknad.fnr)
+                assertEquals(correlationId, nySøknad.correlationId)
             }
         }
     }
@@ -61,19 +67,19 @@ internal class NySøknadTest {
 
     @Test
     fun `json serialization`() {
-        assertEquals(parseString(nySøknad.value()), parseString(fromJson(nySøknad.value(), mapOf("X-Correlation-ID" to "1"))?.value()))
+        assertEquals(
+            parseString(nySøknad.value()),
+            parseString(fromJson(nySøknad.value(), mapOf("X-Correlation-ID" to "1"))?.value())
+        )
     }
 
     @Test
     fun `should add headers`() {
-        val producerRecord1 = NySøknad("2", "sakId", "aktørId", "søknadId", "{}", "fnr")
-                .toProducerRecord("TOPIC")
-        assertEquals(0, producerRecord1.headers().count())
-
-        val producerRecord2 = NySøknad("3", "sakId", "aktørId", "søknadId", "{}", "fnr")
-                .toProducerRecord("TOPDIC", mapOf("X-Correlation-ID" to "abcdef"))
-        assertEquals(1, producerRecord2.headers().count())
-        assertEquals("abcdef", producerRecord2.headersAsString()["X-Correlation-ID"])
+        val correlationId = "2"
+        val producerRecord1 = NySøknad(correlationId, "sakId", "aktørId", "søknadId", "{}", "fnr")
+            .toProducerRecord("TOPIC")
+        assertEquals(1, producerRecord1.headers().count())
+        assertEquals(correlationId, producerRecord1.headersAsString()["X-Correlation-ID"])
     }
 
 }

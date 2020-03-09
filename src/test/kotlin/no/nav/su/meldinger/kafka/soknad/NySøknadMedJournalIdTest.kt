@@ -32,6 +32,7 @@ internal class NySøknadMedJournalIdTest {
 
     @Test
     fun `should create from consumer record`() {
+        val correlationId = "correlationId"
         val søknadFromRecord = fromConsumerRecord(
                 consumerRecord("123", """
     {
@@ -43,11 +44,10 @@ internal class NySøknadMedJournalIdTest {
                 "journalId":"444",
                 "fnr":"12345678910"
             }    
-        """.trimIndent()))
+        """.trimIndent(), correlationId))
 
         when (søknadFromRecord) {
             is NySøknadMedJournalId -> {
-                assertEquals("defaultCorrelation", søknadFromRecord.correlationId)
                 assertEquals("123", søknadFromRecord.sakId)
                 assertEquals("54321", søknadFromRecord.aktørId)
                 assertEquals("222", søknadFromRecord.søknadId)
@@ -55,6 +55,7 @@ internal class NySøknadMedJournalIdTest {
                 assertEquals("333", søknadFromRecord.gsakId)
                 assertEquals("444", søknadFromRecord.journalId)
                 assertEquals("12345678910", søknadFromRecord.fnr)
+                assertEquals(correlationId, søknadFromRecord.correlationId)
             }
             else -> fail()
         }
