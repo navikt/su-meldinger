@@ -13,8 +13,14 @@ import org.junit.jupiter.api.Test
 internal class NySøknadMedJournalIdTest {
 
     private val nySøknadMedJournalId = NySøknadMedJournalId(
-            sakId = "123", aktørId = "1234567891011", søknadId = "222",
-            søknad = søknadJson, fnr = "12345678910", gsakId = "333", journalId = "444"
+        correlationId = "correlate",
+        sakId = "123",
+        aktørId = "1234567891011",
+        søknadId = "222",
+        søknad = søknadJson,
+        fnr = "12345678910",
+        gsakId = "333",
+        journalId = "444"
     )
 
     @Test
@@ -41,6 +47,7 @@ internal class NySøknadMedJournalIdTest {
 
         when (søknadFromRecord) {
             is NySøknadMedJournalId -> {
+                assertEquals("defaultCorrelation", søknadFromRecord.correlationId)
                 assertEquals("123", søknadFromRecord.sakId)
                 assertEquals("54321", søknadFromRecord.aktørId)
                 assertEquals("222", søknadFromRecord.søknadId)
@@ -57,7 +64,7 @@ internal class NySøknadMedJournalIdTest {
     fun `json serialization`() {
         assertEquals(
                 parseString(nySøknadMedJournalId.value()),
-                parseString(fromJson(nySøknadMedJournalId.value())?.value())
+                parseString(fromJson(nySøknadMedJournalId.value(), mapOf("X-Correlation-ID" to "some correlation id"))?.value())
         )
     }
 

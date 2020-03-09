@@ -2,8 +2,10 @@ package no.nav.su.meldinger.kafka
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 
-fun consumerRecord(key: String, value: String): ConsumerRecord<String, String> {
-    return ConsumerRecord("", 0, 0, key, value)
+fun consumerRecord(key: String, value: String, correlationId: String = "defaultCorrelation"): ConsumerRecord<String, String> {
+    return ConsumerRecord("", 0, 0, key, value).apply {
+        this.headers().add("X-Correlation-ID", correlationId.toByteArray())
+    }
 }
 
 val søknadJson =

@@ -15,7 +15,8 @@ internal class UkjentSøknadFormatTest {
                 "sakId":"123",
                 "aktørId":"54321"
             }    
-        """.trimIndent()
+        """.trimIndent(),
+        headers = mapOf("X-Correlation-ID" to "noe greier")
     )
 
     @Test

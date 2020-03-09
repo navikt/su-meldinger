@@ -15,9 +15,12 @@ import org.junit.jupiter.api.assertDoesNotThrow
 internal class NySøknadTest {
 
     private val nySøknad = NySøknad(
-            sakId = "123", aktørId = "1234567891011", søknadId = "222",
-            søknad = søknadJson,
-            fnr = "12345678910"
+        correlationId = "a correlate",
+        sakId = "123",
+        aktørId = "1234567891011",
+        søknadId = "222",
+        søknad = søknadJson,
+        fnr = "12345678910"
     )
 
     @Test
@@ -58,16 +61,16 @@ internal class NySøknadTest {
 
     @Test
     fun `json serialization`() {
-        assertEquals(parseString(nySøknad.value()), parseString(fromJson(nySøknad.value())?.value()))
+        assertEquals(parseString(nySøknad.value()), parseString(fromJson(nySøknad.value(), mapOf("X-Correlation-ID" to "1"))?.value()))
     }
 
     @Test
     fun `should add headers`() {
-        val producerRecord1 = NySøknad("sakId", "aktørId", "søknadId", "{}", "fnr")
+        val producerRecord1 = NySøknad("2", "sakId", "aktørId", "søknadId", "{}", "fnr")
                 .toProducerRecord("TOPIC")
         assertEquals(0, producerRecord1.headers().count())
 
-        val producerRecord2 = NySøknad("sakId", "aktørId", "søknadId", "{}", "fnr")
+        val producerRecord2 = NySøknad("3", "sakId", "aktørId", "søknadId", "{}", "fnr")
                 .toProducerRecord("TOPDIC", mapOf("X-Correlation-ID" to "abcdef"))
         assertEquals(1, producerRecord2.headers().count())
         assertEquals("abcdef", producerRecord2.headersAsString()["X-Correlation-ID"])

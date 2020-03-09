@@ -14,8 +14,13 @@ import org.junit.jupiter.api.assertDoesNotThrow
 internal class NySøknadMedSkyggesakTest {
 
     private val nySøknadMedSkyggesak = NySøknadMedSkyggesak(
-            sakId = "123", aktørId = "1234567891011", søknadId = "222",
-            søknad = søknadJson, fnr = "12345678910", gsakId = "333"
+        correlationId = "correlate this",
+        sakId = "123",
+        aktørId = "1234567891011",
+        søknadId = "222",
+        søknad = søknadJson,
+        fnr = "12345678910",
+        gsakId = "333"
     )
 
     @Test
@@ -55,7 +60,7 @@ internal class NySøknadMedSkyggesakTest {
     fun `json serialization`() {
         assertEquals(
                 parseString(nySøknadMedSkyggesak.value()),
-                parseString(fromJson(nySøknadMedSkyggesak.value())?.value())
+                parseString(fromJson(nySøknadMedSkyggesak.value(), mapOf("X-Correlation-ID" to "some correlate"))?.value())
         )
     }
 
