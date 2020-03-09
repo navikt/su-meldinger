@@ -116,6 +116,7 @@ class NySøknadMedSkyggesak(
     }
 
     fun medJournalId(journalId: String) = NySøknadMedJournalId(sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, gsakId = gsakId, journalId = journalId)
+    fun følger(original: NySøknad): Boolean = this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad
 
     companion object : Visitor<NySøknadMedSkyggesak> {
         val requiredFields = NySøknad.requiredFields + gsakIdKey
@@ -164,6 +165,8 @@ class NySøknadMedJournalId(
             }
     """.trimIndent()
     }
+
+    fun følger(original: NySøknadMedSkyggesak): Boolean = this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad && this.gsakId == original.gsakId
 
     companion object : Visitor<NySøknadMedJournalId> {
         val requiredFields = NySøknadMedSkyggesak.requiredFields + journalIdKey
