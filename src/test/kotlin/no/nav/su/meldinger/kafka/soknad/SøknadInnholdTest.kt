@@ -13,8 +13,7 @@ import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.mellomnavnK
 import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.planlagtUtenlandsoppholdKey
 import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.registrertePerioderKey
 import org.json.JSONObject
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -23,11 +22,11 @@ internal class SøknadInnholdTest {
 
     private val personopplysninger = Personopplysninger(
             fnr = "12345678910",
-            fornavn = "fornavn",
-            mellomnavn = "mellomnavn",
-            etternavn = "etternavn",
+            fornavn = "kake",
+            mellomnavn = "kjeks",
+            etternavn = "mannen",
             telefonnummer = "12345678",
-            gateadresse = "gateadresse",
+            gateadresse = "gaten",
             postnummer = "0050",
             poststed = "Oslo",
             bruksenhet = "50",
@@ -39,10 +38,10 @@ internal class SøknadInnholdTest {
 
     private val boforhold = Boforhold(
             delerBolig = true,
-            borSammenMed = listOf("borSammenMed"),
+            borSammenMed = listOf("voksen", "barn"),
             delerBoligMed = listOf(
-                    Boforhold.DelerBoligMedPerson("fnr", "navn"),
-                    Boforhold.DelerBoligMedPerson("fnr", "navn"))
+                    Boforhold.DelerBoligMedPerson("voksen1", "voksen jensen"),
+                    Boforhold.DelerBoligMedPerson("voksen2", "voksen hansen"))
     )
 
     private val utenlandsopphold = Utenlandsopphold(
@@ -60,27 +59,27 @@ internal class SøknadInnholdTest {
 
     private val inntektPensjonFormue = InntektPensjonFormue(
             framsattKravAnnenYtelse = true,
-            framsattKravAnnenYtelseBegrunnelse = "framsattKravAnnenYtelseBegrunnelse",
+            framsattKravAnnenYtelseBegrunnelse = "annen ytelse begrunnelse",
             harInntekt = true,
             inntektBeløp = 2500.0,
             harPensjon = true,
             pensjonsOrdning = listOf(
-                    PensjonsOrdningBeløp("ordning", 2000.0),
-                    PensjonsOrdningBeløp("ordning", 5000.0)),
+                    PensjonsOrdningBeløp("KLP", 2000.0),
+                    PensjonsOrdningBeløp("SPK", 5000.0)),
             sumInntektOgPensjon = 7000.0,
             harFormueEiendom = true,
             harFinansFormue = true,
             formueBeløp = 1000.0,
             harAnnenFormue = true,
-            annenFormue = listOf(AnnenFormue("type", 2000.0))
+            annenFormue = listOf(AnnenFormue("juveler", 2000.0))
     )
 
     private val forNav = ForNav(
-            målform = "målform",
+            målform = "norsk",
             søkerMøttPersonlig = true,
             harFullmektigMøtt = false,
             erPassSjekket = true,
-            forNAVMerknader = "bla bla bla"
+            forNAVMerknader = "intet å bemerke"
     )
 
     private val søknad = SøknadInnhold(
@@ -98,6 +97,35 @@ internal class SøknadInnholdTest {
             JSONObject(søknad.toJson())
         }
         assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
+    }
+
+    @Test
+    fun `should put " " if appropriate around conditional values`() {
+        val personopplysninger = personopplysninger.toJson()
+        assertTrue(personopplysninger.contains("\"kjeks\""))
+        assertTrue(personopplysninger.contains("\"50\""))
+
+        val boforhold = boforhold.toJson()
+        assertTrue(boforhold.contains("\"voksen\""))
+        assertTrue(boforhold.contains("\"barn\""))
+        assertTrue(boforhold.contains("\"voksen1\""))
+        assertTrue(boforhold.contains("\"voksen jensen\""))
+
+        val oppholdstillatelse = oppholdstillatelse.toJson()
+        assertTrue(oppholdstillatelse.contains("\"2020-03-10\""))
+        assertFalse(oppholdstillatelse.contains("\"true\""))
+
+        val utenlandsopphold = utenlandsopphold.toJson()
+        assertFalse(utenlandsopphold.contains("\"[\""))
+        assertFalse(utenlandsopphold.contains("\"]\""))
+
+        val forNav = forNav.toJson()
+        assertTrue(forNav.contains("\"intet å bemerke\""))
+
+        val inntektPensjonFormue = inntektPensjonFormue.toJson()
+        assertTrue(inntektPensjonFormue.contains("\"annen ytelse begrunnelse\""))
+        assertFalse(inntektPensjonFormue.contains("\"[\""))
+        assertFalse(inntektPensjonFormue.contains("\"]\""))
     }
 
     @Test

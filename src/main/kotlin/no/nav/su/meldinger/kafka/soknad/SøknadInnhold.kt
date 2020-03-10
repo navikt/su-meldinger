@@ -51,7 +51,6 @@ data class SøknadInnhold(
     }
 
     override fun toString() = toJson()
-
 }
 
 data class Personopplysninger(
@@ -73,13 +72,13 @@ data class Personopplysninger(
         {
             "$fnrKey": "$fnr",
             "$fornavnKey": "$fornavn",
-            "$mellomnavnKey": ${if (mellomnavn != null) "$mellomnavn" else null},
+            "$mellomnavnKey": ${jsonStringOrNull(mellomnavn)},
             "$etternavnKey": "$etternavn",
             "$telefonnummerKey": "$telefonnummer",
             "$gateadresseKey": "$gateadresse",
             "$postnummerKey": "$postnummer",
             "$poststedKey": "$poststed",
-            "$bruksenhetKey": ${if (bruksenhet != null) "$bruksenhet" else null},
+            "$bruksenhetKey": ${jsonStringOrNull(bruksenhet)},
             "$bokommuneKey": "$bokommune",
             "$flyktningKey": $flyktning,
             "$borFastINorgeKey": $borFastINorge,
@@ -118,6 +117,7 @@ data class Personopplysninger(
                 statsborgerskap = jsonObject.getString(statsborgerskapKey)
         )
     }
+    override fun toString() = toJson()
 }
 
 data class Oppholdstillatelse(
@@ -128,8 +128,8 @@ data class Oppholdstillatelse(
     override fun toJson() = """
         {
             "$harVarigOppholdKey": $harVarigOpphold,
-            "$utløpsDatoKey" : ${if (utløpsDato != null) "$utløpsDato" else null},
-            "$søktOmForlengelseKey": ${if (søktOmForlengelse != null) søktOmForlengelse else null} 
+            "$utløpsDatoKey" : ${jsonStringOrNull(utløpsDato)},
+            "$søktOmForlengelseKey": ${getOrNull(søktOmForlengelse)} 
         }
     """.trimIndent()
 
@@ -139,10 +139,11 @@ data class Oppholdstillatelse(
         internal const val søktOmForlengelseKey = "søktOmForlengelse"
         override fun fromJson(jsonObject: JSONObject) = Oppholdstillatelse(
                 harVarigOpphold = jsonObject.getBoolean(harVarigOppholdKey),
-                utløpsDato = if (jsonObject.optString(utløpsDatoKey, null) != null) LocalDate.parse(jsonObject.getString(utløpsDatoKey), ISO_DATE) else null,
+                utløpsDato = localDateOrNull(jsonObject.optString(utløpsDatoKey, null)),
                 søktOmForlengelse = jsonObject.optNullableBoolean(søktOmForlengelseKey)
         )
     }
+    override fun toString() = toJson()
 }
 
 data class Boforhold(
@@ -153,7 +154,7 @@ data class Boforhold(
     override fun toJson() = """
         {
             "$delerBoligKey": $delerBolig,
-            "$borSammenMedKey": ${if (borSammenMed != null) "[${borSammenMed.joinToString(",")}]" else null},
+            "$borSammenMedKey": ${if (borSammenMed != null) "${borSammenMed.map { "\"$it\"" }.toList()}" else null},
             "$delerBoligMedKey": ${delerBoligMed?.listToJson()}
     }
     """.trimIndent()
@@ -168,6 +169,7 @@ data class Boforhold(
                 delerBoligMed = DelerBoligMedPerson.fromJsonArray(jsonObject.optJSONArray(delerBoligMedKey))
         )
     }
+    override fun toString() = toJson()
 
     data class DelerBoligMedPerson(
             val fnr: String,
@@ -188,6 +190,7 @@ data class Boforhold(
                     navn = jsonObject.getString(navnKey)
             )
         }
+        override fun toString() = toJson()
     }
 }
 
@@ -218,6 +221,7 @@ data class Utenlandsopphold(
                 planlagtePerioder = UtenlandsoppholdPeriode.fromJsonArray(jsonObject.optJSONArray(planlagtePerioderKey))
         )
     }
+    override fun toString() = toJson()
 }
 
 data class UtenlandsoppholdPeriode(
@@ -239,6 +243,7 @@ data class UtenlandsoppholdPeriode(
                 innreisedato = LocalDate.parse(jsonObject.getString(innreisedatoKey), ISO_DATE)
         )
     }
+    override fun toString() = toJson()
 }
 
 data class ForNav(
@@ -254,7 +259,7 @@ data class ForNav(
             "$søkerMøttPersonligKey": $søkerMøttPersonlig,
             "$harFullmektigMøttKey": $harFullmektigMøtt,
             "$erPassSjekketKey": $erPassSjekket,
-            "$forNAVMerknaderKey": ${if (forNAVMerknader != null) "$forNAVMerknader" else null}
+            "$forNAVMerknaderKey": ${jsonStringOrNull(forNAVMerknader)}
         }
     """.trimIndent()
 
@@ -272,6 +277,7 @@ data class ForNav(
                 forNAVMerknader = jsonObject.optString(forNAVMerknaderKey, null)
         )
     }
+    override fun toString() = toJson()
 }
 
 data class InntektPensjonFormue(
@@ -291,7 +297,7 @@ data class InntektPensjonFormue(
     override fun toJson() = """
         {
             "$framsattKravAnnenYtelseKey": $framsattKravAnnenYtelse,
-            "$framsattKravAnnenYtelseBegrunnelseKey": ${if (framsattKravAnnenYtelseBegrunnelse != null) "$framsattKravAnnenYtelseBegrunnelse" else null},
+            "$framsattKravAnnenYtelseBegrunnelseKey": ${jsonStringOrNull(framsattKravAnnenYtelseBegrunnelse)},
             "$harInntektKey": $harInntekt,
             "$inntektBeløpKey": $inntektBeløp,
             "$harPensjonKey": $harPensjon,
@@ -332,6 +338,7 @@ data class InntektPensjonFormue(
                 harAnnenFormue = jsonObject.getBoolean(harAnnenFormueKey),
                 annenFormue = AnnenFormue.fromJsonArray(jsonObject.optJSONArray(annenFormueKey)))
     }
+    override fun toString() = toJson()
 }
 
 data class AnnenFormue(
@@ -353,6 +360,7 @@ data class AnnenFormue(
                 skattetakst = jsonObject.getDouble(skattetakstKey)
         )
     }
+    override fun toString() = toJson()
 }
 
 
@@ -375,6 +383,7 @@ data class PensjonsOrdningBeløp(
                 beløp = jsonObject.getDouble(beløpKey)
         )
     }
+    override fun toString() = toJson()
 }
 
 fun <T : toJson<T>> List<T>.listToJson() = "[${this.joinToString(",") { it.toJson() }}]"
@@ -395,4 +404,19 @@ fun <T> fromJson<T>.fromJsonArray(jsonArray: JSONArray?): List<T>? {
         list.add(fromJson(jsonObject))
     }
     return list
+}
+
+fun localDateOrNull(any: String?): LocalDate? = when (val value = getOrNull(any)) {
+    null -> null
+    else -> LocalDate.parse(any, ISO_DATE)
+}
+
+fun jsonStringOrNull(any: Any?): Any? = when (getOrNull(any)) {
+    null -> null
+    else -> "\"$any\""
+}
+
+fun getOrNull(any: Any?): Any? = when (any) {
+    null -> null
+    else -> any
 }
