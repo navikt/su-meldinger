@@ -32,6 +32,7 @@ internal class NySøknadMedSkyggesakTest {
 
     @Test
     fun `should create from consumer record`() {
+        val correlationId = "correlationId"
         val nySøknadHentGsak = fromConsumerRecord(
                 consumerRecord("123", """
             {
@@ -42,7 +43,8 @@ internal class NySøknadMedSkyggesakTest {
                 "gsakId":"111",
                 "fnr":"12345678910"
             }    
-        """.trimIndent()))
+        """.trimIndent(), correlationId
+                ))
 
         when (nySøknadHentGsak) {
             is NySøknadMedSkyggesak -> {
@@ -51,6 +53,7 @@ internal class NySøknadMedSkyggesakTest {
                 assertEquals("123", nySøknadHentGsak.søknadId)
                 assertEquals(parseString(søknadJson), parseString(nySøknadHentGsak.søknad))
                 assertEquals("111", nySøknadHentGsak.gsakId)
+                assertEquals(correlationId, nySøknadHentGsak.correlationId)
             }
             else -> fail("${nySøknadHentGsak::class}")
         }

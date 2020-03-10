@@ -8,10 +8,6 @@ import org.json.JSONObject
 interface KafkaMessage {
     fun key(): String
     fun value(): String
-    fun toProducerRecord(topic: String, headers: Map<String, String> = emptyMap()): ProducerRecord<String, String> =
-        ProducerRecord(topic, key(), value()).also { record ->
-            headers.forEach { record.headers().add(it.key, it.value.toByteArray()) }
-        }
 }
 
 interface Visitor<T> {
@@ -42,6 +38,11 @@ sealed class SøknadMelding(val correlationId: String) : KafkaMessage {
                         ?: NySøknad.fromJson(record.value(), record.headersAsString())
                         ?: UkjentFormat(record.key(), record.value(), record.headersAsString())
     }
+
+    fun toProducerRecord(topic: String): ProducerRecord<String, String> =
+        ProducerRecord(topic, key(), value()).also { record ->
+            record.headers().add(correlationKey, correlationId.toByteArray())
+        }
 
     override fun toString(): String = "class: ${this::class.java.simpleName}, key: ${key()}, value: ${value()}"
     override fun equals(other: Any?): Boolean = other is SøknadMelding && this::class == other::class && JSONObject(value()).similar(JSONObject(other.value()))
@@ -121,6 +122,8 @@ class NySøknadMedSkyggesak(
     }
 
     fun medJournalId(journalId: String) = NySøknadMedJournalId(correlationId = correlationId, sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, gsakId = gsakId, journalId = journalId)
+
+    /** Er denne meldingen lik sin forgjenger? */
     fun følger(original: NySøknad): Boolean = this.correlationId == original.correlationId && this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad
 
     companion object : Visitor<NySøknadMedSkyggesak> {
@@ -173,6 +176,7 @@ class NySøknadMedJournalId(
     """.trimIndent()
     }
 
+    /** Er denne meldingen lik sin forgjenger? */
     fun følger(original: NySøknadMedSkyggesak): Boolean = this.correlationId == original.correlationId && this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad && this.gsakId == original.gsakId
 
     companion object : Visitor<NySøknadMedJournalId> {

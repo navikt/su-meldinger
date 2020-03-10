@@ -28,13 +28,15 @@ internal class UkjentSøknadFormatTest {
 
     @Test
     fun `should create from consumer record`() {
+        val correlationId = "correlationId"
         val json = """{"sakId":"222","aktørId":"54321"}"""
-        val søknad = fromConsumerRecord(consumerRecord("123", json))
+        val søknad = fromConsumerRecord(consumerRecord("123", json, correlationId))
 
         when (søknad) {
             is UkjentFormat -> {
                 assertEquals("123", søknad.key())
                 assertEquals(json, søknad.value())
+                assertEquals(correlationId, søknad.correlationId)
             }
         }
     }
