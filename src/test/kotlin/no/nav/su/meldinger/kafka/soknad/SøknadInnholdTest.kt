@@ -1,7 +1,20 @@
 package no.nav.su.meldinger.kafka.soknad
 
+import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.borSammenMedKey
+import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
+import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.forNAVMerknaderKey
+import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.annenFormueKey
+import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.framsattKravAnnenYtelseBegrunnelseKey
+import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.pensjonsOrdningKey
+import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.søktOmForlengelseKey
+import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.utløpsDatoKey
+import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.bruksenhetKey
+import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.mellomnavnKey
+import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.planlagtUtenlandsoppholdKey
+import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.registrertePerioderKey
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -22,11 +35,7 @@ internal class SøknadInnholdTest {
             flyktning = true,
             borFastINorge = true,
             statsborgerskap = "NOR"
-    ).also {
-        assertDoesNotThrow() {
-            JSONObject(it.toJson())
-        }
-    }
+    )
 
     private val boforhold = Boforhold(
             delerBolig = true,
@@ -34,32 +43,20 @@ internal class SøknadInnholdTest {
             delerBoligMed = listOf(
                     Boforhold.DelerBoligMedPerson("fnr", "navn"),
                     Boforhold.DelerBoligMedPerson("fnr", "navn"))
-    ).also {
-        assertDoesNotThrow() {
-            JSONObject(it.toJson())
-        }
-    }
+    )
 
     private val utenlandsopphold = Utenlandsopphold(
             utenlandsopphold = true,
             registrertePerioder = listOf(UtenlandsoppholdPeriode(LocalDate.now(), LocalDate.now())),
             planlagtUtenlandsopphold = true,
             planlagtePerioder = listOf(UtenlandsoppholdPeriode(LocalDate.now(), LocalDate.now()))
-    ).also {
-        assertDoesNotThrow() {
-            JSONObject(it.toJson())
-        }
-    }
+    )
 
     private val oppholdstillatelse = Oppholdstillatelse(
             harVarigOpphold = false,
             utløpsDato = LocalDate.now(),
             søktOmForlengelse = true
-    ).also {
-        assertDoesNotThrow() {
-            JSONObject(it.toJson())
-        }
-    }
+    )
 
     private val inntektPensjonFormue = InntektPensjonFormue(
             framsattKravAnnenYtelse = true,
@@ -76,27 +73,123 @@ internal class SøknadInnholdTest {
             formueBeløp = 1000.0,
             harAnnenFormue = true,
             annenFormue = listOf(AnnenFormue("type", 2000.0))
-    ).also {
-        assertDoesNotThrow() {
-            JSONObject(it.toJson())
-        }
-    }
+    )
+
+    private val forNav = ForNav(
+            målform = "målform",
+            søkerMøttPersonlig = true,
+            harFullmektigMøtt = false,
+            erPassSjekket = true,
+            forNAVMerknader = "bla bla bla"
+    )
 
     private val søknad = SøknadInnhold(
             personopplysninger = personopplysninger,
             boforhold = boforhold,
             utenlandsopphold = utenlandsopphold,
             oppholdstillatelse = oppholdstillatelse,
-            inntektPensjonFormue = inntektPensjonFormue
-    ).also {
+            inntektPensjonFormue = inntektPensjonFormue,
+            forNav = forNav
+    )
+
+    @Test
+    fun `should convert to and from json`() {
         assertDoesNotThrow() {
-            JSONObject(it.toJson())
+            JSONObject(søknad.toJson())
         }
+        assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
     }
 
     @Test
-    fun `should create object from json`() {
-        println(søknad)
+    fun `should handle optional values as null`() {
+        val jsonPersonopplysninger = JSONObject(Personopplysninger(
+                fnr = "12345678910",
+                fornavn = "fornavn",
+                etternavn = "etternavn",
+                telefonnummer = "12345678",
+                gateadresse = "gateadresse",
+                postnummer = "0050",
+                poststed = "Oslo",
+                bokommune = "Oslo",
+                flyktning = true,
+                borFastINorge = true,
+                statsborgerskap = "NOR"
+        ).toJson())
+        assertNull(jsonPersonopplysninger.optString(mellomnavnKey, null))
+        assertNull(jsonPersonopplysninger.optString(bruksenhetKey, null))
+
+        val personopplysninger = Personopplysninger.fromJson(jsonPersonopplysninger)
+        assertNull(personopplysninger.mellomnavn)
+        assertNull(personopplysninger.bruksenhet)
+
+        val jsonBoforhold = JSONObject(Boforhold(
+                delerBolig = false
+        ).toJson())
+        assertNull(jsonBoforhold.optString(borSammenMedKey, null))
+        assertNull(jsonBoforhold.optString(delerBoligMedKey, null))
+
+        val boforhold = Boforhold.fromJson(jsonBoforhold)
+        assertNull(boforhold.borSammenMed)
+        assertNull(boforhold.delerBoligMed)
+
+        val jsonOppholdstillatelse = JSONObject(Oppholdstillatelse(
+                harVarigOpphold = false
+        ).toJson())
+
+        assertNull(jsonOppholdstillatelse.optString(utløpsDatoKey, null))
+        assertNull(jsonOppholdstillatelse.optNullableBoolean(søktOmForlengelseKey))
+
+        val oppholdstillatelse = Oppholdstillatelse.fromJson(jsonOppholdstillatelse)
+        assertNull(oppholdstillatelse.utløpsDato)
+        assertNull(oppholdstillatelse.søktOmForlengelse)
+
+        val jsonUtenlandsopphold = JSONObject(Utenlandsopphold(
+                utenlandsopphold = false,
+                planlagtUtenlandsopphold = false
+        ).toJson())
+        assertNull(jsonUtenlandsopphold.optJSONArray(registrertePerioderKey))
+        assertNull(jsonUtenlandsopphold.optJSONArray(planlagtUtenlandsoppholdKey))
+
+        val utenlandsopphold = Utenlandsopphold.fromJson(jsonUtenlandsopphold)
+        assertNull(utenlandsopphold.registrertePerioder)
+        assertNull(utenlandsopphold.planlagtePerioder)
+
+        val jsonForNav = JSONObject(ForNav(
+                målform = "målform",
+                søkerMøttPersonlig = true,
+                harFullmektigMøtt = false,
+                erPassSjekket = true
+        ).toJson())
+        assertNull(jsonUtenlandsopphold.optString(forNAVMerknaderKey, null))
+
+        val forNav = ForNav.fromJson(jsonForNav)
+        assertNull(forNav.forNAVMerknader)
+
+        val jsonInntektPensjonFormue = JSONObject(InntektPensjonFormue(
+                framsattKravAnnenYtelse = true,
+                harInntekt = true,
+                inntektBeløp = 2500.0,
+                harPensjon = false,
+                sumInntektOgPensjon = 7000.0,
+                harFormueEiendom = false,
+                harFinansFormue = true,
+                formueBeløp = 1000.0,
+                harAnnenFormue = true
+        ).toJson())
+        assertNull(jsonInntektPensjonFormue.optString(framsattKravAnnenYtelseBegrunnelseKey, null))
+        assertNull(jsonInntektPensjonFormue.optJSONArray(pensjonsOrdningKey))
+        assertNull(jsonInntektPensjonFormue.optJSONArray(annenFormueKey))
+
+        val inntektPensjonFormue = InntektPensjonFormue.fromJson(jsonInntektPensjonFormue)
+        assertNull(inntektPensjonFormue.framsattKravAnnenYtelseBegrunnelse)
+        assertNull(inntektPensjonFormue.pensjonsOrdning)
+        assertNull(inntektPensjonFormue.annenFormue)
+
+        val søknad = SøknadInnhold(personopplysninger, boforhold, utenlandsopphold, oppholdstillatelse, inntektPensjonFormue, forNav)
+
+        assertDoesNotThrow {
+            JSONObject(søknad.toJson())
+        }
         assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
     }
 }
