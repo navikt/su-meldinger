@@ -29,7 +29,7 @@ data class SøknadInnhold(
             "$utenlandsoppholdKey": ${utenlandsopphold.toJson()},
             "$oppholdstillatelseKey": ${oppholdstillatelse.toJson()},
             "$inntektPensjonFormueKey": ${inntektPensjonFormue.toJson()},
-            "$forNavKey": ${forNav.toJson()},
+            "$forNavKey": ${forNav.toJson()}
         }
     """.trimIndent()
 

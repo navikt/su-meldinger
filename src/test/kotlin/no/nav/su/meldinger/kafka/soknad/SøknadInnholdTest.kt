@@ -1,5 +1,6 @@
 package no.nav.su.meldinger.kafka.soknad
 
+import com.google.gson.JsonParser
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.borSammenMedKey
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
 import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.forNAVMerknaderKey
@@ -97,6 +98,7 @@ internal class SøknadInnholdTest {
     fun `should convert to and from json`() {
         assertDoesNotThrow() {
             JSONObject(søknad.toJson())
+            JsonParser.parseString(søknad.toJson()) //Strict check of json syntax - JSONObject helps us along a bit too much.
         }
         assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
     }
