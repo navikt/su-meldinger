@@ -5,10 +5,12 @@ import no.nav.su.meldinger.kafka.soknad.SøknadMelding
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
@@ -16,10 +18,7 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
- * Databærer for ting som vil oftest finnes i
- * ApplicationConf fra ktor.
- * Vi ønsker ikke binde Meldingsleseren til ktor,
- * så vi bruker heller denne.
+ * Forenklet kafka-configurering og instansiering av diverse kafka-tjenester
  */
 class KafkaMiljø(
     val groupId: String,
@@ -29,7 +28,11 @@ class KafkaMiljø(
     val password: String,
     val trustStorePath: String,
     val trustStorePassword: String
-)
+) {
+    fun producer(): KafkaProducer<String, String> = KafkaProducer(KafkaConsumerConfigBuilder(this).producerConfig(), StringSerializer(), StringSerializer())
+    fun consumer(): KafkaConsumer<String, String> = KafkaConsumer(KafkaConsumerConfigBuilder(this).consumerConfig(), StringDeserializer(), StringDeserializer())
+    fun meldingsleser(rapport: Meldingsleser.Meldingrapport): Meldingsleser = Meldingsleser(this, rapport)
+}
 
 /**
  * Kan lese meldinger fra kafka og reagere på enkelte meldinger bestemt av
