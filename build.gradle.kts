@@ -76,6 +76,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("org.apache.kafka:kafka-streams:2.3.0")
 
+    testImplementation("no.nav:kafka-embedded-env:2.2.3")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
