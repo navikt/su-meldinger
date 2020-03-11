@@ -21,6 +21,7 @@ apply(plugin = "org.jetbrains.kotlin.jvm")
 java {
     sourceCompatibility = JavaVersion.VERSION_12
     targetCompatibility = JavaVersion.VERSION_12
+    withSourcesJar()
 }
 
 val githubUser: String? by project
