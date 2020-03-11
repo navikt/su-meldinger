@@ -17,9 +17,11 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.Month
 
 internal class SøknadInnholdTest {
 
+    private val aDate = LocalDate.of(2020, Month.MARCH, 10)
     private val personopplysninger = Personopplysninger(
             fnr = "12345678910",
             fornavn = "kake",
@@ -46,14 +48,14 @@ internal class SøknadInnholdTest {
 
     private val utenlandsopphold = Utenlandsopphold(
             utenlandsopphold = true,
-            registrertePerioder = listOf(UtenlandsoppholdPeriode(LocalDate.now(), LocalDate.now())),
+            registrertePerioder = listOf(UtenlandsoppholdPeriode(aDate, aDate)),
             planlagtUtenlandsopphold = true,
-            planlagtePerioder = listOf(UtenlandsoppholdPeriode(LocalDate.now(), LocalDate.now()))
+            planlagtePerioder = listOf(UtenlandsoppholdPeriode(aDate, aDate))
     )
 
     private val oppholdstillatelse = Oppholdstillatelse(
             harVarigOpphold = false,
-            utløpsDato = LocalDate.now(),
+            utløpsDato = aDate,
             søktOmForlengelse = true
     )
 
