@@ -45,7 +45,7 @@ sealed class SøknadMelding(val correlationId: String) : KafkaMessage {
         }
 
     override fun toString(): String = "class: ${this::class.java.simpleName}, key: ${key()}, value: ${value()}"
-    override fun equals(other: Any?): Boolean = other is SøknadMelding && this::class == other::class && JSONObject(value()).similar(JSONObject(other.value()))
+    override fun equals(other: Any?): Boolean = other is SøknadMelding && this::class == other::class && JSONObject(value()).toString() == JSONObject(other.value()).toString()
     override fun hashCode(): Int = key().hashCode() + 31 * value().hashCode()
 }
 
