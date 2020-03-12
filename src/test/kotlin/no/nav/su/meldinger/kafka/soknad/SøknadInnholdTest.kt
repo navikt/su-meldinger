@@ -18,85 +18,12 @@ import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.time.LocalDate
-import java.time.Month
+import java.time.LocalDate.of
+import java.time.Month.*
 
 internal class SøknadInnholdTest {
 
-    private val aDate = LocalDate.of(2020, Month.MARCH, 10)
-    private val personopplysninger = Personopplysninger(
-            fnr = "12345678910",
-            fornavn = "kake",
-            mellomnavn = "kjeks",
-            etternavn = "mannen",
-            telefonnummer = "12345678",
-            gateadresse = "gaten",
-            postnummer = "0050",
-            poststed = "Oslo",
-            bruksenhet = "50",
-            bokommune = "Oslo",
-            flyktning = true,
-            borFastINorge = true,
-            statsborgerskap = "NOR"
-    )
-
-    private val boforhold = Boforhold(
-            delerBolig = true,
-            borSammenMed = listOf("voksen", "barn"),
-            delerBoligMed = listOf(
-                    Boforhold.DelerBoligMedPerson("voksen1", "voksen jensen"),
-                    Boforhold.DelerBoligMedPerson("voksen2", "voksen hansen"))
-    )
-
-    private val utenlandsopphold = Utenlandsopphold(
-            utenlandsopphold = true,
-            registrertePerioder = listOf(UtenlandsoppholdPeriode(aDate, aDate)),
-            planlagtUtenlandsopphold = true,
-            planlagtePerioder = listOf(UtenlandsoppholdPeriode(aDate, aDate))
-    )
-
-    private val oppholdstillatelse = Oppholdstillatelse(
-            harVarigOpphold = false,
-            utløpsDato = aDate,
-            søktOmForlengelse = true
-    )
-
-    private val inntektPensjonFormue = InntektPensjonFormue(
-            framsattKravAnnenYtelse = true,
-            framsattKravAnnenYtelseBegrunnelse = "annen ytelse begrunnelse",
-            harInntekt = true,
-            inntektBeløp = 2500.0,
-            harPensjon = true,
-            pensjonsOrdning = listOf(
-                    PensjonsOrdningBeløp("KLP", 2000.0),
-                    PensjonsOrdningBeløp("SPK", 5000.0)),
-            sumInntektOgPensjon = 7000.0,
-            harFormueEiendom = true,
-            harFinansFormue = true,
-            formueBeløp = 1000.0,
-            harAnnenFormue = true,
-            annenFormue = listOf(AnnenFormue("juveler", 2000.0)),
-            harDepositumskonto = true,
-            depositumBeløp = 25000,
-            harSosialStønad = true
-    )
-
-    private val forNav = ForNav(
-            målform = "norsk",
-            søkerMøttPersonlig = true,
-            harFullmektigMøtt = false,
-            erPassSjekket = true,
-            merknader = "intet å bemerke"
-    )
-
-    private val søknad = SøknadInnhold(
-            personopplysninger = personopplysninger,
-            boforhold = boforhold,
-            utenlandsopphold = utenlandsopphold,
-            oppholdstillatelse = oppholdstillatelse,
-            inntektPensjonFormue = inntektPensjonFormue,
-            forNav = forNav
-    )
+    private val søknad = SøknadInnholdTestdataBuilder.build()
 
     @Test
     fun `should convert to and from json`() {
@@ -109,29 +36,29 @@ internal class SøknadInnholdTest {
 
     @Test
     fun `should put " " if appropriate around conditional values`() {
-        val personopplysninger = personopplysninger.toJson()
-        assertTrue(personopplysninger.contains("\"kjeks\""))
-        assertTrue(personopplysninger.contains("\"50\""))
+        val personopplysninger = søknad.personopplysninger.toJson()
+        assertTrue(personopplysninger.contains("\"Erik\""))
+        assertTrue(personopplysninger.contains("\"U1H20\""))
 
-        val boforhold = boforhold.toJson()
-        assertTrue(boforhold.contains("\"voksen\""))
-        assertTrue(boforhold.contains("\"barn\""))
-        assertTrue(boforhold.contains("\"voksen1\""))
-        assertTrue(boforhold.contains("\"voksen jensen\""))
+        val boforhold = søknad.boforhold.toJson()
+        assertTrue(boforhold.contains("\"Kari Nordmann\""))
+        assertTrue(boforhold.contains("\"Ektefelle/Partner/Samboer\""))
+        assertTrue(boforhold.contains("\"Per Nordmann\""))
+        assertTrue(boforhold.contains("\"Andre personer over 18 år\""))
 
-        val oppholdstillatelse = oppholdstillatelse.toJson()
-        assertTrue(oppholdstillatelse.contains("\"2020-03-10\""))
+        val oppholdstillatelse = søknad.oppholdstillatelse.toJson()
+        assertTrue(oppholdstillatelse.contains("\"2020-12-31\""))
         assertFalse(oppholdstillatelse.contains("\"true\""))
 
-        val utenlandsopphold = utenlandsopphold.toJson()
+        val utenlandsopphold = søknad.utenlandsopphold.toJson()
         assertFalse(utenlandsopphold.contains("\"[\""))
         assertFalse(utenlandsopphold.contains("\"]\""))
 
-        val forNav = forNav.toJson()
-        assertTrue(forNav.contains("\"intet å bemerke\""))
+        val forNav = søknad.forNav.toJson()
+        assertTrue(forNav.contains("\"Intet å bemerke\""))
 
-        val inntektPensjonFormue = inntektPensjonFormue.toJson()
-        assertTrue(inntektPensjonFormue.contains("\"annen ytelse begrunnelse\""))
+        val inntektPensjonFormue = søknad.inntektPensjonFormue.toJson()
+        assertTrue(inntektPensjonFormue.contains("\"Har søkt om foreldrepenger\""))
         assertFalse(inntektPensjonFormue.contains("\"[\""))
         assertFalse(inntektPensjonFormue.contains("\"]\""))
     }
@@ -232,5 +159,90 @@ internal class SøknadInnholdTest {
             JsonParser.parseString(søknad.toJson()) //Strict check of json syntax - JSONObject helps us along a bit too much.
         }
         assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
+    }
+}
+
+class SøknadInnholdTestdataBuilder {
+    companion object {
+        fun personopplysninger(
+                fnr: String = "12345678910",
+                fornavn: String = "Ola",
+                mellomnavn: String = "Erik",
+                etternavn: String = "Nordmann",
+                telefonnummer: String = "12345678",
+                gateadresse: String = "Oslogata 12",
+                postnummer: String = "0050",
+                poststed: String = "Oslo",
+                bruksenhet: String = "U1H20",
+                bokommune: String = "Oslo",
+                flyktning: Boolean = true,
+                borFastINorge: Boolean = true,
+                statsborgerskap: String = "NOR"
+        ) = Personopplysninger(
+                fnr, fornavn, mellomnavn, etternavn, telefonnummer, gateadresse, postnummer, poststed, bruksenhet, bokommune, flyktning, borFastINorge, statsborgerskap
+        )
+
+        fun build(
+                personopplysninger: Personopplysninger = personopplysninger(),
+
+                boforhold: Boforhold = Boforhold(
+                        delerBolig = true,
+                        borSammenMed = listOf(
+                                "Ektefelle/Partner/Samboer",
+                                "Andre personer over 18 år"
+                        ),
+                        delerBoligMed = listOf(
+                                Boforhold.DelerBoligMedPerson("12345678911", "Kari Nordmann"),
+                                Boforhold.DelerBoligMedPerson("12345678912", "Per Nordmann"))
+                ),
+
+                utenlandsopphold: Utenlandsopphold = Utenlandsopphold(
+                        utenlandsopphold = true,
+                        registrertePerioder = listOf(
+                                UtenlandsoppholdPeriode(of(2020, JANUARY, 1), of(2020, JANUARY, 31)),
+                                UtenlandsoppholdPeriode(of(2020, FEBRUARY, 1), of(2020, FEBRUARY, 5))),
+                        planlagtUtenlandsopphold = true,
+                        planlagtePerioder = listOf(
+                                UtenlandsoppholdPeriode(of(2020, JULY, 1), of(2020, JULY, 31))
+                        )
+                ),
+
+                oppholdstillatelse: Oppholdstillatelse = Oppholdstillatelse(
+                        harVarigOpphold = false,
+                        utløpsDato = of(2020, DECEMBER, 31),
+                        søktOmForlengelse = true
+                ),
+
+                inntektPensjonFormue: InntektPensjonFormue = InntektPensjonFormue(
+                        framsattKravAnnenYtelse = true,
+                        framsattKravAnnenYtelseBegrunnelse = "Har søkt om foreldrepenger",
+                        harInntekt = true,
+                        inntektBeløp = 2500.0,
+                        harPensjon = true,
+                        pensjonsOrdning = listOf(
+                                PensjonsOrdningBeløp("KLP", 2000.0),
+                                PensjonsOrdningBeløp("SPK", 5000.0)),
+                        sumInntektOgPensjon = 7000.0,
+                        harFormueEiendom = true,
+                        harFinansFormue = true,
+                        formueBeløp = 1000.0,
+                        harAnnenFormue = true,
+                        annenFormue = listOf(
+                                AnnenFormue("Juveler", 2000.0),
+                                AnnenFormue("Speedbåt", 200000.0)
+                        ),
+                        harDepositumskonto = true,
+                        depositumBeløp = 25000,
+                        harSosialStønad = true
+                ),
+
+                forNav: ForNav = ForNav(
+                        målform = "Norsk",
+                        søkerMøttPersonlig = true,
+                        harFullmektigMøtt = false,
+                        erPassSjekket = true,
+                        merknader = "Intet å bemerke"
+                )
+        ) = SøknadInnhold(personopplysninger, boforhold, utenlandsopphold, oppholdstillatelse, inntektPensjonFormue, forNav)
     }
 }
