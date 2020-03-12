@@ -5,6 +5,7 @@ import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.borSammenMedKey
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
 import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.merknaderKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.annenFormueKey
+import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.depositumBeløpKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.framsattKravAnnenYtelseBegrunnelseKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.pensjonsOrdningKey
 import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.søktOmForlengelseKey
@@ -74,7 +75,9 @@ internal class SøknadInnholdTest {
             harFinansFormue = true,
             formueBeløp = 1000.0,
             harAnnenFormue = true,
-            annenFormue = listOf(AnnenFormue("juveler", 2000.0))
+            annenFormue = listOf(AnnenFormue("juveler", 2000.0)),
+            harDepositumskonto = true,
+            depositumBeløp = 25000
     )
 
     private val forNav = ForNav(
@@ -198,7 +201,7 @@ internal class SøknadInnholdTest {
         assertNull(forNav.merknader)
 
         val jsonInntektPensjonFormue = JSONObject(InntektPensjonFormue(
-                framsattKravAnnenYtelse = true,
+                framsattKravAnnenYtelse = false,
                 harInntekt = true,
                 inntektBeløp = 2500.0,
                 harPensjon = false,
@@ -206,21 +209,25 @@ internal class SøknadInnholdTest {
                 harFormueEiendom = false,
                 harFinansFormue = true,
                 formueBeløp = 1000.0,
-                harAnnenFormue = true
+                harAnnenFormue = true,
+                harDepositumskonto = false
         ).toJson())
         assertNull(jsonInntektPensjonFormue.optString(framsattKravAnnenYtelseBegrunnelseKey, null))
         assertNull(jsonInntektPensjonFormue.optJSONArray(pensjonsOrdningKey))
         assertNull(jsonInntektPensjonFormue.optJSONArray(annenFormueKey))
+        assertNull(jsonInntektPensjonFormue.optNullableNumber(depositumBeløpKey))
 
         val inntektPensjonFormue = InntektPensjonFormue.fromJson(jsonInntektPensjonFormue)
         assertNull(inntektPensjonFormue.framsattKravAnnenYtelseBegrunnelse)
         assertNull(inntektPensjonFormue.pensjonsOrdning)
         assertNull(inntektPensjonFormue.annenFormue)
+        assertNull(inntektPensjonFormue.depositumBeløp)
 
         val søknad = SøknadInnhold(personopplysninger, boforhold, utenlandsopphold, oppholdstillatelse, inntektPensjonFormue, forNav)
 
         assertDoesNotThrow {
             JSONObject(søknad.toJson())
+            JsonParser.parseString(søknad.toJson()) //Strict check of json syntax - JSONObject helps us along a bit too much.
         }
         assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
     }

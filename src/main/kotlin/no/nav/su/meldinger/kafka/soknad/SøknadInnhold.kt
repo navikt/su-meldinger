@@ -299,7 +299,9 @@ data class InntektPensjonFormue(
         val harFinansFormue: Boolean,
         val formueBeløp: Double,
         val harAnnenFormue: Boolean,
-        val annenFormue: List<AnnenFormue>? = null
+        val annenFormue: List<AnnenFormue>? = null,
+        val harDepositumskonto: Boolean,
+        val depositumBeløp: Number? = null
 ) : toJson<InntektPensjonFormue> {
     override fun toJson() = """
         {
@@ -314,7 +316,9 @@ data class InntektPensjonFormue(
             "$harFinansFormueKey": $harFinansFormue,
             "$formueBeløpKey": $formueBeløp,
             "$harAnnenFormueKey": $harAnnenFormue,
-            "$annenFormueKey": ${annenFormue?.listToJson()}
+            "$annenFormueKey": ${annenFormue?.listToJson()},
+            "$harDepositumskontoKey": $harDepositumskonto,
+            "$depositumBeløpKey": ${getOrNull(depositumBeløp)}
         }
     """.trimIndent()
 
@@ -331,6 +335,8 @@ data class InntektPensjonFormue(
         internal const val formueBeløpKey = "formueBeløp"
         internal const val harAnnenFormueKey = "harAnnenFormue"
         internal const val annenFormueKey = "annenFormue"
+        internal const val harDepositumskontoKey = "harDepositumskonto"
+        internal const val depositumBeløpKey = "depositumBeløp"
         override fun fromJson(jsonObject: JSONObject) = InntektPensjonFormue(
                 framsattKravAnnenYtelse = jsonObject.getBoolean(framsattKravAnnenYtelseKey),
                 framsattKravAnnenYtelseBegrunnelse = jsonObject.optString(framsattKravAnnenYtelseBegrunnelseKey, null),
@@ -343,7 +349,10 @@ data class InntektPensjonFormue(
                 harFinansFormue = jsonObject.getBoolean(harFinansFormueKey),
                 formueBeløp = jsonObject.getDouble(formueBeløpKey),
                 harAnnenFormue = jsonObject.getBoolean(harAnnenFormueKey),
-                annenFormue = AnnenFormue.fromJsonArray(jsonObject.optJSONArray(annenFormueKey)))
+                annenFormue = AnnenFormue.fromJsonArray(jsonObject.optJSONArray(annenFormueKey)),
+                harDepositumskonto = jsonObject.getBoolean(harDepositumskontoKey),
+                depositumBeløp = jsonObject.optNullableNumber(depositumBeløpKey)
+        )
     }
 
     override fun toString() = toJson()
@@ -401,6 +410,14 @@ fun <T : toJson<T>> List<T>.listToJson() = "[${this.joinToString(",") { it.toJso
 fun JSONObject.optNullableBoolean(key: String): Boolean? {
     return try {
         this.getBoolean(key)
+    } catch (e: JSONException) {
+        null
+    }
+}
+
+fun JSONObject.optNullableNumber(key: String): Number? {
+    return try {
+        this.getNumber(key)
     } catch (e: JSONException) {
         null
     }
