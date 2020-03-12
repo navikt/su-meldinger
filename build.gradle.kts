@@ -21,7 +21,6 @@ apply(plugin = "org.jetbrains.kotlin.jvm")
 java {
     sourceCompatibility = JavaVersion.VERSION_12
     targetCompatibility = JavaVersion.VERSION_12
-    withSourcesJar()
 }
 
 val githubUser: String? by project
@@ -63,6 +62,11 @@ configure<PublishingExtension> {
             from(components["java"])
         }
     }
+}
+
+
+tasks.withType<Jar> {
+    from(sourceSets.main.get().allSource, sourceSets.test.get().allSource.include("**/testsupport/**"))
 }
 
 val junitJupiterVersion = "5.6.0-M1"
