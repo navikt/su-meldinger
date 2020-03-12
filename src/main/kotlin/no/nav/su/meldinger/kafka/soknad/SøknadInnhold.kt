@@ -117,6 +117,7 @@ data class Personopplysninger(
                 statsborgerskap = jsonObject.getString(statsborgerskapKey)
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -143,6 +144,7 @@ data class Oppholdstillatelse(
                 søktOmForlengelse = jsonObject.optNullableBoolean(søktOmForlengelseKey)
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -169,6 +171,7 @@ data class Boforhold(
                 delerBoligMed = DelerBoligMedPerson.fromJsonArray(jsonObject.optJSONArray(delerBoligMedKey))
         )
     }
+
     override fun toString() = toJson()
 
     data class DelerBoligMedPerson(
@@ -190,6 +193,7 @@ data class Boforhold(
                     navn = jsonObject.getString(navnKey)
             )
         }
+
         override fun toString() = toJson()
     }
 }
@@ -221,6 +225,7 @@ data class Utenlandsopphold(
                 planlagtePerioder = UtenlandsoppholdPeriode.fromJsonArray(jsonObject.optJSONArray(planlagtePerioderKey))
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -243,6 +248,7 @@ data class UtenlandsoppholdPeriode(
                 innreisedato = LocalDate.parse(jsonObject.getString(innreisedatoKey), ISO_DATE)
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -251,7 +257,7 @@ data class ForNav(
         val søkerMøttPersonlig: Boolean,
         val harFullmektigMøtt: Boolean,
         val erPassSjekket: Boolean,
-        val forNAVMerknader: String? = null
+        val merknader: String? = null
 ) : toJson<ForNav> {
     override fun toJson() = """
         {
@@ -259,7 +265,7 @@ data class ForNav(
             "$søkerMøttPersonligKey": $søkerMøttPersonlig,
             "$harFullmektigMøttKey": $harFullmektigMøtt,
             "$erPassSjekketKey": $erPassSjekket,
-            "$forNAVMerknaderKey": ${jsonStringOrNull(forNAVMerknader)}
+            "$merknaderKey": ${jsonStringOrNull(merknader)}
         }
     """.trimIndent()
 
@@ -268,15 +274,16 @@ data class ForNav(
         internal const val søkerMøttPersonligKey = "søkerMøttPersonlig"
         internal const val harFullmektigMøttKey = "harFullmektigMøtt"
         internal const val erPassSjekketKey = "erPassSjekket"
-        internal const val forNAVMerknaderKey = "forNAVMerknader"
+        internal const val merknaderKey = "merknader"
         override fun fromJson(jsonObject: JSONObject) = ForNav(
                 målform = jsonObject.getString(målformKey),
                 søkerMøttPersonlig = jsonObject.getBoolean(søkerMøttPersonligKey),
                 harFullmektigMøtt = jsonObject.getBoolean(harFullmektigMøttKey),
                 erPassSjekket = jsonObject.getBoolean(erPassSjekketKey),
-                forNAVMerknader = jsonObject.optString(forNAVMerknaderKey, null)
+                merknader = jsonObject.optString(merknaderKey, null)
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -338,6 +345,7 @@ data class InntektPensjonFormue(
                 harAnnenFormue = jsonObject.getBoolean(harAnnenFormueKey),
                 annenFormue = AnnenFormue.fromJsonArray(jsonObject.optJSONArray(annenFormueKey)))
     }
+
     override fun toString() = toJson()
 }
 
@@ -360,6 +368,7 @@ data class AnnenFormue(
                 skattetakst = jsonObject.getDouble(skattetakstKey)
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -383,6 +392,7 @@ data class PensjonsOrdningBeløp(
                 beløp = jsonObject.getDouble(beløpKey)
         )
     }
+
     override fun toString() = toJson()
 }
 
@@ -406,7 +416,7 @@ fun <T> fromJson<T>.fromJsonArray(jsonArray: JSONArray?): List<T>? {
     return list
 }
 
-fun localDateOrNull(any: String?): LocalDate? = when (val value = getOrNull(any)) {
+fun localDateOrNull(any: String?): LocalDate? = when (getOrNull(any)) {
     null -> null
     else -> LocalDate.parse(any, ISO_DATE)
 }

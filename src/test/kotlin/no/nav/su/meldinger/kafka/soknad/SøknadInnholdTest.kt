@@ -3,7 +3,7 @@ package no.nav.su.meldinger.kafka.soknad
 import com.google.gson.JsonParser
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.borSammenMedKey
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
-import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.forNAVMerknaderKey
+import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.merknaderKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.annenFormueKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.framsattKravAnnenYtelseBegrunnelseKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.pensjonsOrdningKey
@@ -82,7 +82,7 @@ internal class SøknadInnholdTest {
             søkerMøttPersonlig = true,
             harFullmektigMøtt = false,
             erPassSjekket = true,
-            forNAVMerknader = "intet å bemerke"
+            merknader = "intet å bemerke"
     )
 
     private val søknad = SøknadInnhold(
@@ -192,10 +192,10 @@ internal class SøknadInnholdTest {
                 harFullmektigMøtt = false,
                 erPassSjekket = true
         ).toJson())
-        assertNull(jsonUtenlandsopphold.optString(forNAVMerknaderKey, null))
+        assertNull(jsonUtenlandsopphold.optString(merknaderKey, null))
 
         val forNav = ForNav.fromJson(jsonForNav)
-        assertNull(forNav.forNAVMerknader)
+        assertNull(forNav.merknader)
 
         val jsonInntektPensjonFormue = JSONObject(InntektPensjonFormue(
                 framsattKravAnnenYtelse = true,

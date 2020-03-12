@@ -94,7 +94,7 @@ val søknadJson =
         "personligmote": "ja",
         "fullmektigmote": "ja",
         "passsjekk": "ja",
-        "forNAVmerknader": "Trivelig type"
+        "merknader": "Trivelig type"
       }
     }
 """.trimIndent()
