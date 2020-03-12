@@ -1,6 +1,5 @@
-package no.nav.su.meldinger.kafka.soknad.testsupport
+package no.nav.su.meldinger.kafka.soknad
 
-import no.nav.su.meldinger.kafka.soknad.*
 import java.time.LocalDate
 import java.time.Month
 
