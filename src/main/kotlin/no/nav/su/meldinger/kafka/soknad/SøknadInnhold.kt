@@ -301,7 +301,8 @@ data class InntektPensjonFormue(
         val harAnnenFormue: Boolean,
         val annenFormue: List<AnnenFormue>? = null,
         val harDepositumskonto: Boolean,
-        val depositumBeløp: Number? = null
+        val depositumBeløp: Number? = null,
+        val harSosialStønad: Boolean
 ) : toJson<InntektPensjonFormue> {
     override fun toJson() = """
         {
@@ -318,7 +319,8 @@ data class InntektPensjonFormue(
             "$harAnnenFormueKey": $harAnnenFormue,
             "$annenFormueKey": ${annenFormue?.listToJson()},
             "$harDepositumskontoKey": $harDepositumskonto,
-            "$depositumBeløpKey": ${getOrNull(depositumBeløp)}
+            "$depositumBeløpKey": ${getOrNull(depositumBeløp)},
+            "$harSosialStønadKey": $harSosialStønad
         }
     """.trimIndent()
 
@@ -337,6 +339,7 @@ data class InntektPensjonFormue(
         internal const val annenFormueKey = "annenFormue"
         internal const val harDepositumskontoKey = "harDepositumskonto"
         internal const val depositumBeløpKey = "depositumBeløp"
+        internal const val harSosialStønadKey = "harSosialStønad"
         override fun fromJson(jsonObject: JSONObject) = InntektPensjonFormue(
                 framsattKravAnnenYtelse = jsonObject.getBoolean(framsattKravAnnenYtelseKey),
                 framsattKravAnnenYtelseBegrunnelse = jsonObject.optString(framsattKravAnnenYtelseBegrunnelseKey, null),
@@ -351,7 +354,8 @@ data class InntektPensjonFormue(
                 harAnnenFormue = jsonObject.getBoolean(harAnnenFormueKey),
                 annenFormue = AnnenFormue.fromJsonArray(jsonObject.optJSONArray(annenFormueKey)),
                 harDepositumskonto = jsonObject.getBoolean(harDepositumskontoKey),
-                depositumBeløp = jsonObject.optNullableNumber(depositumBeløpKey)
+                depositumBeløp = jsonObject.optNullableNumber(depositumBeløpKey),
+                harSosialStønad = jsonObject.getBoolean(harSosialStønadKey)
         )
     }
 

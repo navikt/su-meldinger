@@ -77,7 +77,8 @@ internal class SøknadInnholdTest {
             harAnnenFormue = true,
             annenFormue = listOf(AnnenFormue("juveler", 2000.0)),
             harDepositumskonto = true,
-            depositumBeløp = 25000
+            depositumBeløp = 25000,
+            harSosialStønad = true
     )
 
     private val forNav = ForNav(
@@ -210,7 +211,8 @@ internal class SøknadInnholdTest {
                 harFinansFormue = true,
                 formueBeløp = 1000.0,
                 harAnnenFormue = true,
-                harDepositumskonto = false
+                harDepositumskonto = false,
+                harSosialStønad = true
         ).toJson())
         assertNull(jsonInntektPensjonFormue.optString(framsattKravAnnenYtelseBegrunnelseKey, null))
         assertNull(jsonInntektPensjonFormue.optJSONArray(pensjonsOrdningKey))
