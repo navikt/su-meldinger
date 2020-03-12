@@ -6,7 +6,9 @@ import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
 import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.merknaderKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.annenFormueKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.depositumBeløpKey
+import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.formueBeløpKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.framsattKravAnnenYtelseBegrunnelseKey
+import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.inntektBeløpKey
 import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.pensjonsOrdningKey
 import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.søktOmForlengelseKey
 import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.utløpsDatoKey
@@ -129,12 +131,10 @@ internal class SøknadInnholdTest {
         val jsonInntektPensjonFormue = JSONObject(InntektPensjonFormue(
                 framsattKravAnnenYtelse = false,
                 harInntekt = true,
-                inntektBeløp = 2500.0,
                 harPensjon = false,
                 sumInntektOgPensjon = 7000.0,
                 harFormueEiendom = false,
                 harFinansFormue = true,
-                formueBeløp = 1000.0,
                 harAnnenFormue = true,
                 harDepositumskonto = false,
                 harSosialStønad = true
@@ -142,12 +142,16 @@ internal class SøknadInnholdTest {
         assertNull(jsonInntektPensjonFormue.optString(framsattKravAnnenYtelseBegrunnelseKey, null))
         assertNull(jsonInntektPensjonFormue.optJSONArray(pensjonsOrdningKey))
         assertNull(jsonInntektPensjonFormue.optJSONArray(annenFormueKey))
+        assertNull(jsonInntektPensjonFormue.optNullableNumber(inntektBeløpKey))
+        assertNull(jsonInntektPensjonFormue.optNullableNumber(formueBeløpKey))
         assertNull(jsonInntektPensjonFormue.optNullableNumber(depositumBeløpKey))
 
         val inntektPensjonFormue = InntektPensjonFormue.fromJson(jsonInntektPensjonFormue)
         assertNull(inntektPensjonFormue.framsattKravAnnenYtelseBegrunnelse)
         assertNull(inntektPensjonFormue.pensjonsOrdning)
         assertNull(inntektPensjonFormue.annenFormue)
+        assertNull(inntektPensjonFormue.inntektBeløp)
+        assertNull(inntektPensjonFormue.formueBeløp)
         assertNull(inntektPensjonFormue.depositumBeløp)
 
         val søknad = SøknadInnhold(personopplysninger, boforhold, utenlandsopphold, oppholdstillatelse, inntektPensjonFormue, forNav)
