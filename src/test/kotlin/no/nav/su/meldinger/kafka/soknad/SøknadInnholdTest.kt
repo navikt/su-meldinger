@@ -14,7 +14,6 @@ import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.bruksenhetK
 import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.mellomnavnKey
 import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.planlagtUtenlandsoppholdKey
 import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.registrertePerioderKey
-import no.nav.su.meldinger.kafka.soknad.testsupport.SøknadInnholdTestdataBuilder
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
