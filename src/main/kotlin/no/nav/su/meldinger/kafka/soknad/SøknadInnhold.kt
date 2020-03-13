@@ -216,7 +216,7 @@ data class Utenlandsopphold(
     companion object : fromJson<Utenlandsopphold> {
         internal const val utenlandsoppholdKey = "utenlandsopphold"
         internal const val registrertePerioderKey = "registrertePerioder"
-        internal const val planlagtUtenlandsoppholdKey = "planlagteUtenlandsopphold"
+        internal const val planlagtUtenlandsoppholdKey = "planlagtUtenlandsopphold"
         internal const val planlagtePerioderKey = "planlagtePerioder"
         override fun fromJson(jsonObject: JSONObject) = Utenlandsopphold(
                 utenlandsopphold = jsonObject.getBoolean(utenlandsoppholdKey),
