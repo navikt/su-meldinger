@@ -19,7 +19,6 @@ internal class NySøknadMedJournalIdTest {
         søknadId = "222",
         søknad = søknadJson,
         fnr = "12345678910",
-        gsakId = "333",
         journalId = "444"
     )
 
@@ -52,7 +51,6 @@ internal class NySøknadMedJournalIdTest {
                 assertEquals("54321", søknadFromRecord.aktørId)
                 assertEquals("222", søknadFromRecord.søknadId)
                 assertEquals(parseString(søknadJson), parseString(søknadFromRecord.søknad))
-                assertEquals("333", søknadFromRecord.gsakId)
                 assertEquals("444", søknadFromRecord.journalId)
                 assertEquals("12345678910", søknadFromRecord.fnr)
                 assertEquals(correlationId, søknadFromRecord.correlationId)

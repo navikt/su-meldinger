@@ -14,8 +14,7 @@ internal class SøknadMeldingTest {
             søknad = søknadJson,
             fnr = "12345678910"
     )
-    private val nySøknadMedSkyggesak = nySøknad.medSkyggesak("333")
-    private val nySøknadMedJournalId = nySøknadMedSkyggesak.medJournalId("444")
+    private val nySøknadMedJournalId = nySøknad.medJournalId("444")
 
     @Test
     fun equals() {
@@ -77,37 +76,6 @@ internal class SøknadMeldingTest {
         ))
         assertNotEquals(nySøknad, null)
 
-        assertEquals(nySøknadMedSkyggesak, NySøknadMedSkyggesak(
-                correlationId = "5",
-                sakId = "123",
-                aktørId = "1234567891011",
-                søknadId = "222",
-                søknad = søknadJson,
-                fnr = "12345678910",
-                gsakId = "333"
-        ))
-
-        assertNotEquals(nySøknadMedSkyggesak, NySøknadMedSkyggesak(
-                correlationId = "5",
-                sakId = "123",
-                aktørId = "1234567891011",
-                søknadId = "222",
-                søknad = søknadJson,
-                fnr = "01987654321",
-                gsakId = "333"
-        ))
-        assertNotEquals(nySøknadMedSkyggesak, NySøknadMedSkyggesak(
-             correlationId = "5",
-                sakId = "123",
-                aktørId = "1234567891011",
-                søknadId = "222",
-                søknad = søknadJson,
-                fnr = "12345678910",
-                gsakId = "444"
-        ))
-
-        assertNotEquals(nySøknadMedSkyggesak, null)
-
         assertEquals(nySøknadMedJournalId, NySøknadMedJournalId(
                 correlationId = "5",
                 sakId = "123",
@@ -115,15 +83,12 @@ internal class SøknadMeldingTest {
                 søknadId = "222",
                 søknad = søknadJson,
                 fnr = "12345678910",
-                gsakId = "333",
                 journalId = "444"
         ))
 
         assertNotEquals(nySøknadMedJournalId, null)
 
-        assertNotEquals(nySøknad, nySøknadMedSkyggesak)
         assertNotEquals(nySøknad, nySøknadMedJournalId)
-        assertNotEquals(nySøknadMedJournalId, nySøknadMedSkyggesak)
     }
 
     @Test
@@ -141,17 +106,17 @@ internal class SøknadMeldingTest {
         assertTrue(hashSetOf(message1).contains(message1))
         assertFalse(hashSetOf(message1).contains(message2))
 
-        val message3 = NySøknadMedSkyggesak(
+        val message3 = NySøknadMedJournalId(
                 correlationId = "5", sakId = "123", aktørId = "1234567891011", søknadId = "222",
                 søknad = søknadJson,
                 fnr = "12345678910",
-                gsakId = "333"
+                journalId = "jid"
         )
-        val message4 = NySøknadMedSkyggesak(
+        val message4 = NySøknadMedJournalId(
                 correlationId = "5", sakId = "123", aktørId = "1234567891011", søknadId = "111",
                 søknad = søknadJson,
                 fnr = "12345678910",
-                gsakId = "444"
+                journalId = "jid"
         )
         assertNotEquals(message3.hashCode(), message4.hashCode())
         assertEquals(message3.hashCode(), message3.hashCode())

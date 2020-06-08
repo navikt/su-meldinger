@@ -21,7 +21,6 @@ sealed class SøknadMelding(val correlationId: String) : KafkaMessage {
         internal const val aktørIdKey = "aktørId"
         internal const val søknadIdKey = "søknadId"
         internal const val søknadKey = "søknad"
-        internal const val gsakIdKey = "gsakId"
         internal const val journalIdKey = "journalId"
         internal const val fnrKey = "fnr"
         internal const val correlationKey = "X-Correlation-ID"
@@ -34,7 +33,6 @@ sealed class SøknadMelding(val correlationId: String) : KafkaMessage {
 
         fun fromConsumerRecord(record: ConsumerRecord<String, String>): SøknadMelding =
                 NySøknadMedJournalId.fromJson(record.value(), record.headersAsString())
-                        ?: NySøknadMedSkyggesak.fromJson(record.value(), record.headersAsString())
                         ?: NySøknad.fromJson(record.value(), record.headersAsString())
                         ?: UkjentFormat(record.key(), record.value(), record.headersAsString())
     }
@@ -71,11 +69,11 @@ class NySøknad(
         """.trimIndent()
     }
 
-    fun medSkyggesak(gsakId: String) = NySøknadMedSkyggesak(correlationId = correlationId, sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, gsakId = gsakId)
+    fun medJournalId(journalId: String) = NySøknadMedJournalId(correlationId = correlationId, sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, journalId = journalId)
 
     companion object : Visitor<NySøknad> {
         val requiredFields = listOf(sakIdKey, aktørIdKey, søknadIdKey, søknadKey, fnrKey)
-        val forbiddenFields = listOf(gsakIdKey)
+        val forbiddenFields = listOf(journalIdKey)
         override fun accept(json: String): Boolean = accept(json, requiredFields, forbiddenFields)
 
         override fun fromJson(json: String, headers: Map<String, String>): NySøknad? {
@@ -97,59 +95,6 @@ class NySøknad(
     }
 }
 
-class NySøknadMedSkyggesak(
-    correlationId: String,
-    val sakId: String,
-    val aktørId: String,
-    val søknadId: String,
-    val søknad: String,
-    val fnr: String,
-    val gsakId: String
-) : SøknadMelding(correlationId) {
-    override fun key(): String = sakId
-    override fun value(): String = toJson()
-    private fun toJson(): String {
-        return """
-            {
-                "$sakIdKey":"$sakId",
-                "$aktørIdKey":"$aktørId",
-                "$søknadIdKey":"$søknadId",
-                "$søknadKey":$søknad,
-                "$fnrKey":"$fnr",
-                "$gsakIdKey":"$gsakId"
-            }
-        """.trimIndent()
-    }
-
-    fun medJournalId(journalId: String) = NySøknadMedJournalId(correlationId = correlationId, sakId = sakId, aktørId = aktørId, søknadId = søknadId, søknad = søknad, fnr = fnr, gsakId = gsakId, journalId = journalId)
-
-    /** Er denne meldingen lik sin forgjenger? */
-    fun følger(original: NySøknad): Boolean = this.correlationId == original.correlationId && this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad
-
-    companion object : Visitor<NySøknadMedSkyggesak> {
-        val requiredFields = NySøknad.requiredFields + gsakIdKey
-        val forbiddenFields = listOf(journalIdKey)
-        override fun accept(json: String): Boolean = accept(json, requiredFields, forbiddenFields)
-
-        override fun fromJson(json: String, headers: Map<String, String>): NySøknadMedSkyggesak? {
-            return if (accept(json)) {
-                val jsonObject = JSONObject(json)
-                NySøknadMedSkyggesak(
-                        correlationId = headers[correlationKey]?: "correlation id missing",
-                        sakId = jsonObject.getString(sakIdKey),
-                        aktørId = jsonObject.getString(aktørIdKey),
-                        søknadId = jsonObject.getString(søknadIdKey),
-                        søknad = jsonObject.getJSONObject(søknadKey).toString(),
-                        fnr = jsonObject.getString(fnrKey),
-                        gsakId = jsonObject.getString(gsakIdKey).toString()
-                )
-            } else {
-                null
-            }
-        }
-    }
-}
-
 class NySøknadMedJournalId(
     correlationId: String,
     val sakId: String,
@@ -157,7 +102,6 @@ class NySøknadMedJournalId(
     val søknadId: String,
     val søknad: String,
     val fnr: String,
-    val gsakId: String,
     val journalId: String
 ) : SøknadMelding(correlationId) {
     override fun key(): String = sakId
@@ -170,17 +114,16 @@ class NySøknadMedJournalId(
                 "$søknadIdKey":"$søknadId",
                 "$søknadKey":$søknad,
                 "$fnrKey":"$fnr",
-                "$gsakIdKey":"$gsakId",
                 "$journalIdKey":"$journalId"
             }
     """.trimIndent()
     }
 
     /** Er denne meldingen lik sin forgjenger? */
-    fun følger(original: NySøknadMedSkyggesak): Boolean = this.correlationId == original.correlationId && this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad && this.gsakId == original.gsakId
+    fun følger(original: NySøknad): Boolean = this.correlationId == original.correlationId && this.sakId == original.sakId && this.aktørId == original.aktørId && this.søknadId == original.søknadId && this.søknad == original.søknad
 
     companion object : Visitor<NySøknadMedJournalId> {
-        val requiredFields = NySøknadMedSkyggesak.requiredFields + journalIdKey
+        val requiredFields = NySøknad.requiredFields + journalIdKey
         val forbiddenFields = emptyList<String>()
         override fun accept(json: String): Boolean = accept(json, requiredFields, forbiddenFields)
 
@@ -194,7 +137,6 @@ class NySøknadMedJournalId(
                         søknadId = jsonObject.getString(søknadIdKey),
                         søknad = jsonObject.getJSONObject(søknadKey).toString(),
                         fnr = jsonObject.getString(fnrKey),
-                        gsakId = jsonObject.getString(gsakIdKey).toString(),
                         journalId = jsonObject.getString(journalIdKey).toString()
                 )
             } else {
