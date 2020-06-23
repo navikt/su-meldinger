@@ -4,17 +4,17 @@ import com.google.gson.JsonParser
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.borSammenMedKey
 import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
 import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.merknaderKey
-import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.annenFormueKey
-import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.depositumBeløpKey
-import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.formueBeløpKey
-import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.framsattKravAnnenYtelseBegrunnelseKey
-import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.inntektBeløpKey
-import no.nav.su.meldinger.kafka.soknad.InntektPensjonFormue.Companion.pensjonsOrdningKey
+import no.nav.su.meldinger.kafka.soknad.Formue.Companion.annenFormueKey
+import no.nav.su.meldinger.kafka.soknad.Formue.Companion.depositumBeløpKey
+import no.nav.su.meldinger.kafka.soknad.Formue.Companion.formueBeløpKey
+import no.nav.su.meldinger.kafka.soknad.InntektOgPensjon.Companion.framsattKravAnnenYtelseBegrunnelseKey
+import no.nav.su.meldinger.kafka.soknad.InntektOgPensjon.Companion.inntektBeløpKey
+import no.nav.su.meldinger.kafka.soknad.InntektOgPensjon.Companion.pensjonsOrdningKey
 import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.søktOmForlengelseKey
 import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.utløpsDatoKey
 import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.bruksenhetKey
 import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.mellomnavnKey
-import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.planlagtUtenlandsoppholdKey
+import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.planlagtePerioderKey
 import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.registrertePerioderKey
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.*
@@ -57,10 +57,12 @@ internal class SøknadInnholdTest {
         val forNav = søknad.forNav.toJson()
         assertTrue(forNav.contains("\"Intet å bemerke\""))
 
-        val inntektPensjonFormue = søknad.inntektPensjonFormue.toJson()
-        assertTrue(inntektPensjonFormue.contains("\"Har søkt om foreldrepenger\""))
-        assertFalse(inntektPensjonFormue.contains("\"[\""))
-        assertFalse(inntektPensjonFormue.contains("\"]\""))
+        val formue = søknad.formue.toJson()
+
+        val inntektOgPensjon = søknad.inntektOgPensjon.toJson()
+        assertTrue(inntektOgPensjon.contains("\"Har søkt om foreldrepenger\""))
+        assertFalse(inntektOgPensjon.contains("\"[\""))
+        assertFalse(inntektOgPensjon.contains("\"]\""))
     }
 
     @Test
@@ -74,8 +76,6 @@ internal class SøknadInnholdTest {
                 postnummer = "0050",
                 poststed = "Oslo",
                 bokommune = "Oslo",
-                flyktning = true,
-                borFastINorge = true,
                 statsborgerskap = "NOR"
         ).toJson())
         assertNull(jsonPersonopplysninger.optString(mellomnavnKey, null))
@@ -85,8 +85,15 @@ internal class SøknadInnholdTest {
         assertNull(personopplysninger.mellomnavn)
         assertNull(personopplysninger.bruksenhet)
 
+        val jsonFlyktningsstatus = JSONObject(Flyktningsstatus(
+                registrertFlyktning = false
+        ))
+        val flyktningsstatus = Flyktningsstatus.fromJson(jsonFlyktningsstatus)
+
+
         val jsonBoforhold = JSONObject(Boforhold(
-                delerBolig = false
+                delerBolig = false,
+                borFastINorge = false
         ).toJson())
         assertNull(jsonBoforhold.optString(borSammenMedKey, null))
         assertNull(jsonBoforhold.optString(delerBoligMedKey, null))
@@ -107,11 +114,9 @@ internal class SøknadInnholdTest {
         assertNull(oppholdstillatelse.søktOmForlengelse)
 
         val jsonUtenlandsopphold = JSONObject(Utenlandsopphold(
-                utenlandsopphold = false,
-                planlagtUtenlandsopphold = false
         ).toJson())
         assertNull(jsonUtenlandsopphold.optJSONArray(registrertePerioderKey))
-        assertNull(jsonUtenlandsopphold.optJSONArray(planlagtUtenlandsoppholdKey))
+        assertNull(jsonUtenlandsopphold.optJSONArray(planlagtePerioderKey))
 
         val utenlandsopphold = Utenlandsopphold.fromJson(jsonUtenlandsopphold)
         assertNull(utenlandsopphold.registrertePerioder)
@@ -128,33 +133,43 @@ internal class SøknadInnholdTest {
         val forNav = ForNav.fromJson(jsonForNav)
         assertNull(forNav.merknader)
 
-        val jsonInntektPensjonFormue = JSONObject(InntektPensjonFormue(
-                framsattKravAnnenYtelse = false,
-                harInntekt = true,
-                harPensjon = false,
-                sumInntektOgPensjon = 7000.0,
+
+        val jsonFormue = JSONObject(Formue(
                 harFormueEiendom = false,
-                harFinansFormue = true,
+                harFinansformue = true,
                 harAnnenFormue = true,
-                harDepositumskonto = false,
-                harSosialStønad = true
+                harDepositumskonto = false
         ).toJson())
-        assertNull(jsonInntektPensjonFormue.optString(framsattKravAnnenYtelseBegrunnelseKey, null))
-        assertNull(jsonInntektPensjonFormue.optJSONArray(pensjonsOrdningKey))
-        assertNull(jsonInntektPensjonFormue.optJSONArray(annenFormueKey))
-        assertNull(jsonInntektPensjonFormue.optNullableNumber(inntektBeløpKey))
-        assertNull(jsonInntektPensjonFormue.optNullableNumber(formueBeløpKey))
-        assertNull(jsonInntektPensjonFormue.optNullableNumber(depositumBeløpKey))
+        assertNull(jsonFormue.optJSONArray(annenFormueKey))
+        assertNull(jsonFormue.optNullableNumber(formueBeløpKey))
+        assertNull(jsonFormue.optNullableNumber(depositumBeløpKey))
 
-        val inntektPensjonFormue = InntektPensjonFormue.fromJson(jsonInntektPensjonFormue)
-        assertNull(inntektPensjonFormue.framsattKravAnnenYtelseBegrunnelse)
-        assertNull(inntektPensjonFormue.pensjonsOrdning)
-        assertNull(inntektPensjonFormue.annenFormue)
-        assertNull(inntektPensjonFormue.inntektBeløp)
-        assertNull(inntektPensjonFormue.formueBeløp)
-        assertNull(inntektPensjonFormue.depositumBeløp)
+        val formue = Formue.fromJson(jsonFormue)
+        assertNull(formue.annenFormue)
+        assertNull(formue.formueBeløp)
+        assertNull(formue.depositumBeløp)
 
-        val søknad = SøknadInnhold(personopplysninger, boforhold, utenlandsopphold, oppholdstillatelse, inntektPensjonFormue, forNav)
+
+        val jsonInntektOgPensjon = JSONObject(InntektOgPensjon(
+                framsattKravAnnenYtelse = false,
+                framsattKravAnnenYtelseBegrunnelse = null,
+                harInntekt = false,
+                inntektBeløp = null,
+                harPensjon = false,
+                pensjonsOrdning = null,
+                sumInntektOgPensjon = 0,
+                harSosialStønad = false
+        ).toJson())
+        assertNull(jsonInntektOgPensjon.optJSONArray(framsattKravAnnenYtelseBegrunnelseKey))
+        assertNull(jsonInntektOgPensjon.optNullableNumber(inntektBeløpKey))
+        assertNull(jsonInntektOgPensjon.optJSONArray(pensjonsOrdningKey))
+
+        val inntektOgPensjon = InntektOgPensjon.fromJson(jsonInntektOgPensjon)
+        assertNull(inntektOgPensjon.framsattKravAnnenYtelseBegrunnelse)
+        assertNull(inntektOgPensjon.pensjonsOrdning)
+        assertNull(inntektOgPensjon.inntektBeløp)
+
+        val søknad = SøknadInnhold(personopplysninger, flyktningsstatus, boforhold, utenlandsopphold, oppholdstillatelse, inntektOgPensjon, formue, forNav)
 
         assertDoesNotThrow {
             JSONObject(søknad.toJson())
