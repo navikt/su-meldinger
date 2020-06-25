@@ -6,15 +6,16 @@ import org.json.JSONObject
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_DATE
 
-interface toJson<T> {
+interface ToJson<T> {
     fun toJson(): String
 }
 
-interface fromJson<T> {
+interface FromJson<T> {
     fun fromJson(jsonObject: JSONObject): T
 }
 
 data class SøknadInnhold(
+        val uførevedtak: Uførevedtak,
         val personopplysninger: Personopplysninger,
         val flyktningsstatus: Flyktningsstatus,
         val boforhold: Boforhold,
@@ -23,9 +24,11 @@ data class SøknadInnhold(
         val inntektOgPensjon: InntektOgPensjon,
         val formue: Formue,
         val forNav: ForNav
-) : toJson<SøknadInnhold> {
+) : ToJson<SøknadInnhold> {
+
     override fun toJson() = """
         {
+            "$uførevedtakKey": ${uførevedtak.toJson()},
             "$personopplysningerKey": ${personopplysninger.toJson()},
             "$flyktningsstatusKey": ${flyktningsstatus},
             "$boforholdKey": ${boforhold.toJson()},
@@ -37,7 +40,8 @@ data class SøknadInnhold(
         }
     """.trimIndent()
 
-    companion object : fromJson<SøknadInnhold> {
+    companion object : FromJson<SøknadInnhold> {
+        internal const val uførevedtakKey = "uførevedtak"
         internal const val personopplysningerKey = "personopplysninger"
         internal const val flyktningsstatusKey = "flyktningsstatus"
         internal const val boforholdKey = "boforhold"
@@ -47,6 +51,7 @@ data class SøknadInnhold(
         internal const val formueKey = "formue"
         internal const val forNavKey = "forNav"
         override fun fromJson(jsonObject: JSONObject) = SøknadInnhold(
+                uførevedtak = Uførevedtak.fromJson(jsonObject.getJSONObject(uførevedtakKey)),
                 personopplysninger = Personopplysninger.fromJson(jsonObject.getJSONObject(personopplysningerKey)),
                 flyktningsstatus = Flyktningsstatus.fromJson(jsonObject.getJSONObject(flyktningsstatusKey)),
                 boforhold = Boforhold.fromJson(jsonObject.getJSONObject(boforholdKey)),
@@ -61,16 +66,35 @@ data class SøknadInnhold(
     override fun toString() = toJson()
 }
 
-data class Flyktningsstatus(
-        val registrertFlyktning: Boolean
-) : toJson<Flyktningsstatus> {
+data class Uførevedtak(
+        val harUførevedtak: Boolean
+) : ToJson<Flyktningsstatus> {
     override fun toJson() = """
         {
-              "$registrertFlyktningKey": "$registrertFlyktning"
+            "$harUførevedtakKey": $harUførevedtak
         }
     """.trimIndent()
 
-    companion object : fromJson<Flyktningsstatus> {
+    companion object : FromJson<Uførevedtak> {
+        internal const val harUførevedtakKey = "harUførevedtak"
+        override fun fromJson(jsonObject: JSONObject) = Uførevedtak(
+                harUførevedtak = jsonObject.getBoolean(harUførevedtakKey)
+        )
+    }
+
+    override fun toString() = toJson()
+}
+
+data class Flyktningsstatus(
+        val registrertFlyktning: Boolean
+) : ToJson<Flyktningsstatus> {
+    override fun toJson() = """
+        {
+            "$registrertFlyktningKey": $registrertFlyktning
+        }
+    """.trimIndent()
+
+    companion object : FromJson<Flyktningsstatus> {
         internal const val registrertFlyktningKey = "registrertFlyktning"
         override fun fromJson(jsonObject: JSONObject) = Flyktningsstatus(
                 registrertFlyktning = jsonObject.getBoolean(registrertFlyktningKey)
@@ -92,7 +116,7 @@ data class Personopplysninger(
         val bruksenhet: String? = null,
         val bokommune: String,
         val statsborgerskap: String
-) : toJson<Personopplysninger> {
+) : ToJson<Personopplysninger> {
     override fun toJson() = """
         {
             "$fnrKey": "$fnr",
@@ -109,7 +133,7 @@ data class Personopplysninger(
         }
     """.trimIndent()
 
-    companion object : fromJson<Personopplysninger> {
+    companion object : FromJson<Personopplysninger> {
         internal const val fnrKey = "fnr"
         internal const val fornavnKey = "fornavn"
         internal const val mellomnavnKey = "mellomnavn"
@@ -125,13 +149,13 @@ data class Personopplysninger(
         override fun fromJson(jsonObject: JSONObject) = Personopplysninger(
                 fnr = jsonObject.getString(fnrKey),
                 fornavn = jsonObject.getString(fornavnKey),
-                mellomnavn = jsonObject.optString(mellomnavnKey, null),
+                mellomnavn = jsonObject.optNullableString(mellomnavnKey),
                 etternavn = jsonObject.getString(etternavnKey),
                 telefonnummer = jsonObject.getString(telefonnummerKey),
                 gateadresse = jsonObject.getString(gateadresseKey),
                 postnummer = jsonObject.getString(postnummerKey),
                 poststed = jsonObject.getString(poststedKey),
-                bruksenhet = jsonObject.optString(bruksenhetKey, null),
+                bruksenhet = jsonObject.optNullableString(bruksenhetKey),
                 bokommune = jsonObject.getString(bokommuneKey),
                 statsborgerskap = jsonObject.getString(statsborgerskapKey)
         )
@@ -141,90 +165,127 @@ data class Personopplysninger(
 }
 
 data class Oppholdstillatelse(
-        val harVarigOpphold: Boolean,
-        val utløpsDato: LocalDate? = null,
-        val søktOmForlengelse: Boolean? = null
-) : toJson<Oppholdstillatelse> {
+        val erNorskStatsborger: Boolean,
+        val harOppholdstillatelse: Boolean? = null,
+        val oppholdstillatelseType: OppholdstillatelseType? = null,
+        val oppholdstillatelseMindreEnnTreMåneder: Boolean? = null,
+        val oppholdstillatelseForlengelse: Boolean? = null,
+        val statsborgerskapAndreLand: Boolean,
+        val statsborgerskapAndreLandFritekst: String? = null
+) : ToJson<Oppholdstillatelse> {
     override fun toJson() = """
         {
-            "$harVarigOppholdKey": $harVarigOpphold,
-            "$utløpsDatoKey" : ${jsonStringOrNull(utløpsDato)},
-            "$søktOmForlengelseKey": ${getOrNull(søktOmForlengelse)} 
+            "$erNorskStatsborgerKey": $erNorskStatsborger,
+            "$harOppholdstillatelseKey": $harOppholdstillatelse,
+            "$oppholdstillatelseTypeKey": ${jsonStringOrNull(oppholdstillatelseType?.value)},
+            "$oppholdstillatelseMindreEnnTreMånederKey": $oppholdstillatelseMindreEnnTreMåneder,
+            "$oppholdstillatelseForlengelseKey": $oppholdstillatelseForlengelse,
+            "$statsborgerskapAndreLandKey": $statsborgerskapAndreLand,
+            "$statsborgerskapAndreLandFritekstKey": ${jsonStringOrNull(statsborgerskapAndreLandFritekst)}
         }
     """.trimIndent()
 
-    companion object : fromJson<Oppholdstillatelse> {
-        internal const val harVarigOppholdKey = "harVarigOpphold"
-        internal const val utløpsDatoKey = "utløpsdato"
-        internal const val søktOmForlengelseKey = "søktOmForlengelse"
+    companion object : FromJson<Oppholdstillatelse> {
+        internal const val erNorskStatsborgerKey = "erNorskStatsborger"
+        internal const val harOppholdstillatelseKey = "harOppholdstillatelse"
+        internal const val oppholdstillatelseTypeKey = "typeOppholdstillatelse"
+        internal const val oppholdstillatelseMindreEnnTreMånederKey = "oppholdstillatelseMindreEnnTreMåneder"
+        internal const val oppholdstillatelseForlengelseKey = "oppholdstillatelseForlengelse"
+        internal const val statsborgerskapAndreLandKey = "statsborgerskapAndreLand"
+        internal const val statsborgerskapAndreLandFritekstKey = "statsborgerskapAndreLandFritekst"
         override fun fromJson(jsonObject: JSONObject) = Oppholdstillatelse(
-                harVarigOpphold = jsonObject.getBoolean(harVarigOppholdKey),
-                utløpsDato = localDateOrNull(jsonObject.optString(utløpsDatoKey, null)),
-                søktOmForlengelse = jsonObject.optNullableBoolean(søktOmForlengelseKey)
+                erNorskStatsborger = jsonObject.getBoolean(erNorskStatsborgerKey),
+                harOppholdstillatelse = jsonObject.optNullableBoolean(harOppholdstillatelseKey),
+                oppholdstillatelseType = jsonObject.optNullableString(oppholdstillatelseTypeKey)?.let {
+                    OppholdstillatelseType.fromString(it)
+                },
+                oppholdstillatelseMindreEnnTreMåneder = jsonObject.optNullableBoolean(oppholdstillatelseMindreEnnTreMånederKey),
+                oppholdstillatelseForlengelse = jsonObject.optNullableBoolean(oppholdstillatelseForlengelseKey),
+                statsborgerskapAndreLand = jsonObject.getBoolean(statsborgerskapAndreLandKey),
+                statsborgerskapAndreLandFritekst = jsonObject.optNullableString(statsborgerskapAndreLandFritekstKey)
         )
     }
 
     override fun toString() = toJson()
+
+    enum class OppholdstillatelseType(val value: String) {
+        MIDLERTIG("midlertidig"),
+        PERMANENT("permanent");
+
+        override fun toString(): String {
+            return value
+        }
+
+        companion object {
+            fun fromString(value: String): OppholdstillatelseType? {
+                return values().firstOrNull {
+                    it.value == value.trim().toLowerCase()
+                }
+            }
+        }
+    }
 }
 
 data class Boforhold(
+        val borOgOppholderSegINorge: Boolean,
         val delerBolig: Boolean,
-        val borSammenMed: List<String>? = null,
-        val delerBoligMed: List<DelerBoligMedPerson>? = null,
-        val borFastINorge: Boolean
-) : toJson<Boforhold> {
+        val delerBoligMed: DelerBoligMed? = null,
+        val ektemakeEllerSamboerUnder67År: Boolean? = null,
+        val ektemakeEllerSamboerUførFlyktning: Boolean? = null
+
+) : ToJson<Boforhold> {
     override fun toJson() = """
         {
+            "$borOgOppholderSegINorgeKey": $borOgOppholderSegINorge,
             "$delerBoligKey": $delerBolig,
-            "$borSammenMedKey": ${if (borSammenMed != null) "${borSammenMed.map { "\"$it\"" }.toList()}" else null},
-            "$delerBoligMedKey": ${delerBoligMed?.listToJson()},
-            "$borFastINorgeKey": $borFastINorge
+            "$delerBoligMedKey": ${jsonStringOrNull(delerBoligMed?.value)},
+            "$ektemakeEllerSamboerUnder67ÅrKey": $ektemakeEllerSamboerUnder67År,
+            "$ektemakeEllerSamboerUførFlyktningKey": $ektemakeEllerSamboerUførFlyktning
         }
     """.trimIndent()
 
-    companion object : fromJson<Boforhold> {
-        internal const val delerBoligKey = "delerBolig"
-        internal const val borSammenMedKey = "borSammenMed"
+    companion object : FromJson<Boforhold> {
+        internal const val borOgOppholderSegINorgeKey = "borOgOppholderSegINorge"
+        internal const val delerBoligKey = "delerBoligMedVoksne"
         internal const val delerBoligMedKey = "delerBoligMed"
-        internal const val borFastINorgeKey = "borFastINorge"
+        internal const val ektemakeEllerSamboerUnder67ÅrKey = "ektemakeEllerSamboerUnder67År"
+        internal const val ektemakeEllerSamboerUførFlyktningKey = "ektemakeEllerSamboerUførFlyktning"
         override fun fromJson(jsonObject: JSONObject) = Boforhold(
+                borOgOppholderSegINorge = jsonObject.getBoolean(borOgOppholderSegINorgeKey),
                 delerBolig = jsonObject.getBoolean(delerBoligKey),
-                borSammenMed = if (jsonObject.optJSONArray(borSammenMedKey) != null) jsonObject.getJSONArray(borSammenMedKey).toList() as List<String> else null,
-                delerBoligMed = DelerBoligMedPerson.fromJsonArray(jsonObject.optJSONArray(delerBoligMedKey)),
-                borFastINorge = jsonObject.getBoolean(borFastINorgeKey)
+                delerBoligMed = jsonObject.optNullableString(delerBoligMedKey)?.let {
+                    DelerBoligMed.fromString(it)
+                },
+                ektemakeEllerSamboerUnder67År = jsonObject.optNullableBoolean(ektemakeEllerSamboerUnder67ÅrKey),
+                ektemakeEllerSamboerUførFlyktning = jsonObject.optNullableBoolean(ektemakeEllerSamboerUførFlyktningKey)
         )
     }
 
     override fun toString() = toJson()
 
-    data class DelerBoligMedPerson(
-            val fnr: String,
-            val navn: String
-    ) : toJson<DelerBoligMedPerson> {
-        override fun toJson() = """
-            {
-                "$fnrKey": "$fnr",
-                "$navnKey": "$navn"
-            }
-        """.trimIndent()
+    enum class DelerBoligMed(val value: String) {
+        EKTEMAKE_SAMBOER("ektemake-eller-samboer"),
+        VOKSNE_BARN("voksne-barn"),
+        ANNEN_VOKSEN("andre");
 
-        companion object : fromJson<DelerBoligMedPerson> {
-            internal const val fnrKey = "fnr"
-            internal const val navnKey = "navn"
-            override fun fromJson(jsonObject: JSONObject) = DelerBoligMedPerson(
-                    fnr = jsonObject.getString(fnrKey),
-                    navn = jsonObject.getString(navnKey)
-            )
+        override fun toString(): String {
+            return value
         }
 
-        override fun toString() = toJson()
+        companion object {
+            fun fromString(value: String): DelerBoligMed? {
+                return values().firstOrNull {
+                    it.value == value.trim().toLowerCase()
+                }
+            }
+        }
     }
 }
 
 data class Utenlandsopphold(
         val registrertePerioder: List<UtenlandsoppholdPeriode>? = null,
         val planlagtePerioder: List<UtenlandsoppholdPeriode>? = null
-) : toJson<Utenlandsopphold> {
+) : ToJson<Utenlandsopphold> {
     override fun toJson() = """
         {
             "$registrertePerioderKey": ${registrertePerioder?.listToJson()},
@@ -232,7 +293,7 @@ data class Utenlandsopphold(
         }
     """.trimIndent()
 
-    companion object : fromJson<Utenlandsopphold> {
+    companion object : FromJson<Utenlandsopphold> {
         internal const val registrertePerioderKey = "registrertePerioder"
         internal const val planlagtePerioderKey = "planlagtePerioder"
         override fun fromJson(jsonObject: JSONObject) = Utenlandsopphold(
@@ -240,14 +301,13 @@ data class Utenlandsopphold(
                 planlagtePerioder = UtenlandsoppholdPeriode.fromJsonArray(jsonObject.optJSONArray(planlagtePerioderKey))
         )
     }
-
     override fun toString() = toJson()
 }
 
 data class UtenlandsoppholdPeriode(
         val utreisedato: LocalDate,
         val innreisedato: LocalDate
-) : toJson<UtenlandsoppholdPeriode> {
+) : ToJson<UtenlandsoppholdPeriode> {
     override fun toJson(): String = """
           {
             "$utreisedatoKey": "$utreisedato",
@@ -255,7 +315,7 @@ data class UtenlandsoppholdPeriode(
           }
       """.trimIndent()
 
-    companion object : fromJson<UtenlandsoppholdPeriode> {
+    companion object : FromJson<UtenlandsoppholdPeriode> {
         internal const val utreisedatoKey = "utreisedato"
         internal const val innreisedatoKey = "innreisedato"
         override fun fromJson(jsonObject: JSONObject) = UtenlandsoppholdPeriode(
@@ -263,164 +323,174 @@ data class UtenlandsoppholdPeriode(
                 innreisedato = LocalDate.parse(jsonObject.getString(innreisedatoKey), ISO_DATE)
         )
     }
-
     override fun toString() = toJson()
 }
 
 data class ForNav(
-        val målform: String,
-        val søkerMøttPersonlig: Boolean,
-        val harFullmektigMøtt: Boolean,
-        val erPassSjekket: Boolean,
-        val merknader: String? = null
-) : toJson<ForNav> {
+        val harFullmektigEllerVerge: Vergemål? = null
+) : ToJson<ForNav> {
     override fun toJson() = """
         {
-            "$målformKey": "$målform",
-            "$søkerMøttPersonligKey": $søkerMøttPersonlig,
-            "$harFullmektigMøttKey": $harFullmektigMøtt,
-            "$erPassSjekketKey": $erPassSjekket,
-            "$merknaderKey": ${jsonStringOrNull(merknader)}
+            "$harFullmektigEllerVergeKey": ${jsonStringOrNull(harFullmektigEllerVerge)}
         }
     """.trimIndent()
 
-    companion object : fromJson<ForNav> {
-        internal const val målformKey = "målform"
-        internal const val søkerMøttPersonligKey = "søkerMøttPersonlig"
-        internal const val harFullmektigMøttKey = "harFullmektigMøtt"
-        internal const val erPassSjekketKey = "erPassSjekket"
-        internal const val merknaderKey = "merknader"
+    companion object : FromJson<ForNav> {
+        internal const val harFullmektigEllerVergeKey = "harFullmektigEllerVerge"
         override fun fromJson(jsonObject: JSONObject) = ForNav(
-                målform = jsonObject.getString(målformKey),
-                søkerMøttPersonlig = jsonObject.getBoolean(søkerMøttPersonligKey),
-                harFullmektigMøtt = jsonObject.getBoolean(harFullmektigMøttKey),
-                erPassSjekket = jsonObject.getBoolean(erPassSjekketKey),
-                merknader = jsonObject.optString(merknaderKey, null)
+                harFullmektigEllerVerge = jsonObject.optNullableString(harFullmektigEllerVergeKey)?.let {
+                    Vergemål.fromString(it)
+                }
         )
     }
 
     override fun toString() = toJson()
+
+    enum class Vergemål(val value: String) {
+        FULLMEKTIG("fullmektig"),
+        VERGE("verge");
+
+        override fun toString(): String {
+            return value
+        }
+
+        companion object {
+            fun fromString(value: String): Vergemål? {
+                return values().firstOrNull {
+                    it.value == value.trim().toLowerCase()
+                }
+            }
+        }
+    }
 }
 
 data class InntektOgPensjon(
-        val framsattKravAnnenYtelse: Boolean,
-        val framsattKravAnnenYtelseBegrunnelse: String? = null,
-        val harInntekt: Boolean,
-        val inntektBeløp: Number? = null,
-        val harPensjon: Boolean,
-        val pensjonsOrdning: List<PensjonsOrdningBeløp>? = null,
-        val sumInntektOgPensjon: Number,
-        val harSosialStønad: Boolean
-) : toJson<InntektOgPensjon> {
+        val forventetInntekt: Number? = null,
+        val tjenerPengerIUtlandetBeløp: Number? = null,
+        val andreYtelserINav: String? = null,
+        val andreYtelserINavBeløp: Number? = null,
+        val søktAndreYtelserIkkeBehandletBegrunnelse: String? = null,
+        val sosialstønadBeløp: Number? = null,
+        val trygdeytelserIUtlandetBeløp: Number? = null,
+        val trygdeytelserIUtlandet: String? = null,
+        val trygdeytelserIUtlandetFra: String? = null,
+        val pensjon: List<PensjonsOrdningBeløp>? = null
+) : ToJson<InntektOgPensjon> {
+
     override fun toJson() = """
         {
-            "$framsattKravAnnenYtelseKey": $framsattKravAnnenYtelse,
-            "$framsattKravAnnenYtelseBegrunnelseKey": ${jsonStringOrNull(framsattKravAnnenYtelseBegrunnelse)},
-            "$harInntektKey": $harInntekt,
-            "$inntektBeløpKey": ${getOrNull(inntektBeløp)},
-            "$harPensjonKey": $harPensjon,
-            "$pensjonsOrdningKey": ${pensjonsOrdning?.listToJson()},
-            "$sumInntektOgPensjonKey": $sumInntektOgPensjon,
-            "$harSosialStønadKey": $harSosialStønad
+            "$forventetInntektKey": ${jsonStringOrNull(forventetInntekt)},
+            "$tjenerPengerIUtlandetBeløpKey": $tjenerPengerIUtlandetBeløp,
+            "$andreYtelserINavKey": ${jsonStringOrNull(andreYtelserINav)},
+            "$andreYtelserINavBeløpKey": $andreYtelserINavBeløp,
+            "$søktAndreYtelserIkkeBehandletBegrunnelseKey": ${jsonStringOrNull(søktAndreYtelserIkkeBehandletBegrunnelse)},
+            "$sosialstønadBeløpKey": $sosialstønadBeløp,
+            "$trygdeytelserIUtlandetBeløpKey": $trygdeytelserIUtlandetBeløp,
+            "$trygdeytelserIUtlandetKey": ${jsonStringOrNull(trygdeytelserIUtlandet)},
+            "$trygdeytelserIUtlandetFraKey": ${jsonStringOrNull(trygdeytelserIUtlandetFra)},
+            "$pensjonKey":  ${pensjon?.listToJson()}
         }
     """.trimIndent()
 
-    companion object : fromJson<InntektOgPensjon> {
-        internal const val framsattKravAnnenYtelseKey = "framsattKravAnnenYtelse"
-        internal const val framsattKravAnnenYtelseBegrunnelseKey = "framsattKravAnnenYtelseBegrunnelse"
-        internal const val harInntektKey = "harInntekt"
-        internal const val inntektBeløpKey = "inntektBeløp"
-        internal const val harPensjonKey = "harPensjon"
-        internal const val pensjonsOrdningKey = "pensjonsOrdning"
-        internal const val sumInntektOgPensjonKey = "sumInntektOgPensjon"
-        internal const val harSosialStønadKey = "harSosialStønad"
+    companion object : FromJson<InntektOgPensjon> {
+        internal const val forventetInntektKey = "forventetInntekt"
+        internal const val tjenerPengerIUtlandetBeløpKey = "tjenerPengerIUtlandetBeløp"
+        internal const val andreYtelserINavKey = "andreYtelserINav"
+        internal const val andreYtelserINavBeløpKey = "andreYtelserINavBeløp"
+        internal const val søktAndreYtelserIkkeBehandletBegrunnelseKey = "søktAndreYtelserIkkeBehandletBegrunnelse"
+        internal const val sosialstønadBeløpKey = "sosialstønadBeløp"
+        internal const val trygdeytelserIUtlandetBeløpKey = "trygdeytelserIUtlandetBeløp"
+        internal const val trygdeytelserIUtlandetKey = "trygdeytelserIUtlandet"
+        internal const val trygdeytelserIUtlandetFraKey = "trygdeytelserIUtlandetFra"
+        internal const val pensjonKey = "pensjon"
+
         override fun fromJson(jsonObject: JSONObject) = InntektOgPensjon(
-                framsattKravAnnenYtelse = jsonObject.getBoolean(framsattKravAnnenYtelseKey),
-                framsattKravAnnenYtelseBegrunnelse = jsonObject.optString(framsattKravAnnenYtelseBegrunnelseKey, null),
-                harInntekt = jsonObject.getBoolean(harInntektKey),
-                inntektBeløp = jsonObject.optNullableNumber(inntektBeløpKey),
-                harPensjon = jsonObject.getBoolean(harPensjonKey),
-                pensjonsOrdning = PensjonsOrdningBeløp.fromJsonArray(jsonObject.optJSONArray(pensjonsOrdningKey)),
-                sumInntektOgPensjon = jsonObject.getDouble(sumInntektOgPensjonKey),
-                harSosialStønad = jsonObject.getBoolean(harSosialStønadKey)
+                forventetInntekt = jsonObject.optNullableNumber(forventetInntektKey),
+                tjenerPengerIUtlandetBeløp = jsonObject.optNullableNumber(tjenerPengerIUtlandetBeløpKey),
+                andreYtelserINav = jsonObject.optNullableString(andreYtelserINavKey),
+                andreYtelserINavBeløp = jsonObject.optNullableNumber(andreYtelserINavBeløpKey),
+                søktAndreYtelserIkkeBehandletBegrunnelse = jsonObject.optNullableString(søktAndreYtelserIkkeBehandletBegrunnelseKey),
+                sosialstønadBeløp = jsonObject.optNullableNumber(sosialstønadBeløpKey),
+                trygdeytelserIUtlandetBeløp = jsonObject.optNullableNumber(trygdeytelserIUtlandetBeløpKey),
+                trygdeytelserIUtlandet = jsonObject.optNullableString(trygdeytelserIUtlandetKey),
+                trygdeytelserIUtlandetFra = jsonObject.optNullableString(trygdeytelserIUtlandetFraKey),
+                pensjon = PensjonsOrdningBeløp.fromJsonArray(jsonObject.optJSONArray(pensjonKey))
         )
     }
-
     override fun toString() = toJson()
 }
-
 
 data class Formue(
-        val harFormueEiendom: Boolean,
-        val harFinansformue: Boolean,
-        val formueBeløp: Number? = null,
-        val harAnnenFormue: Boolean,
-        val annenFormue: List<AnnenFormue>? = null,
-        val harDepositumskonto: Boolean,
-        val depositumBeløp: Number? = null
-) : toJson<Formue> {
+        val borIBolig: Boolean? = null,
+        val verdiPåBolig: Number? = null,
+        val boligBrukesTil: String? = null,
+        val depositumsBeløp: Number? = null,
+        val Kontonummer: String? = null,
+        val verdiPåEiendom: Number? = null,
+        val eiendomBrukesTil: String? = null,
+        val verdiPåKjøretøy: Number? = null,
+        val kjøretøyDeEier: String? = null,
+        val innskuddsBeløp: Number? = null,
+        val verdipapirBeløp: Number? = null,
+        val skylderNoenMegPengerBeløp: Number? = null,
+        val kontanterBeløp: Number? = null
+) : ToJson<Formue> {
     override fun toJson() = """
         {
-            "$harFormueEiendomKey": $harFormueEiendom,
-            "$harFinansFormueKey": $harFinansformue,
-            "$formueBeløpKey": ${getOrNull(formueBeløp)},
-            "$harAnnenFormueKey": $harAnnenFormue,
-            "$annenFormueKey": ${annenFormue?.listToJson()},
-            "$harDepositumskontoKey": $harDepositumskonto,
-            "$depositumBeløpKey": ${getOrNull(depositumBeløp)}
+            "$borIBoligKey": $borIBolig,
+            "$verdiPåBoligKey": $verdiPåBolig,
+            "$boligBrukesTilKey": ${jsonStringOrNull(boligBrukesTil)},
+            "$depositumsBeløpKey": $depositumsBeløp,
+            "$KontonummerKey": ${jsonStringOrNull(Kontonummer)},
+            "$verdiPåEiendomKey": $verdiPåEiendom,
+            "$eiendomBrukesTilKey": ${jsonStringOrNull(eiendomBrukesTil)},
+            "$verdiPåKjøretøyKey": $verdiPåKjøretøy,
+            "$kjøretøyDeEierKey": ${jsonStringOrNull(kjøretøyDeEier)},
+            "$innskuddsBeløpKey": $innskuddsBeløp,
+            "$verdipapirBeløpKey": $verdipapirBeløp,
+            "$skylderNoenMegPengerBeløpKey": $skylderNoenMegPengerBeløp,
+            "$kontanterBeløpKey": $kontanterBeløp
         }
     """.trimIndent()
 
-    companion object : fromJson<Formue> {
-        internal const val harFormueEiendomKey = "harFormueEiendom"
-        internal const val harFinansFormueKey = "harFinansformue"
-        internal const val formueBeløpKey = "formueBeløp"
-        internal const val harAnnenFormueKey = "harAnnenFormue"
-        internal const val annenFormueKey = "annenFormue"
-        internal const val harDepositumskontoKey = "harDepositumskonto"
-        internal const val depositumBeløpKey = "depositumBeløp"
+    companion object : FromJson<Formue> {
+        internal const val borIBoligKey = "borIBolig"
+        internal const val verdiPåBoligKey = "verdiPåBolig"
+        internal const val boligBrukesTilKey = "boligBrukesTil"
+        internal const val depositumsBeløpKey = "depositumsBeløp"
+        internal const val KontonummerKey = "Kontonummer"
+        internal const val verdiPåEiendomKey = "verdiPåEiendom"
+        internal const val eiendomBrukesTilKey = "eiendomBrukesTil"
+        internal const val verdiPåKjøretøyKey = "verdiPåKjøretøy"
+        internal const val kjøretøyDeEierKey = "kjøretøyDeEier"
+        internal const val innskuddsBeløpKey = "innskuddsBeløp"
+        internal const val verdipapirBeløpKey = "verdipapirBeløp"
+        internal const val skylderNoenMegPengerBeløpKey = "skylderNoenMegPengerBeløp"
+        internal const val kontanterBeløpKey = "kontanterBeløp"
         override fun fromJson(jsonObject: JSONObject) = Formue(
-                harFormueEiendom = jsonObject.getBoolean(harFormueEiendomKey),
-                harFinansformue = jsonObject.getBoolean(harFinansFormueKey),
-                formueBeløp = jsonObject.optNullableNumber(formueBeløpKey),
-                harAnnenFormue = jsonObject.getBoolean(harAnnenFormueKey),
-                annenFormue = AnnenFormue.fromJsonArray(jsonObject.optJSONArray(annenFormueKey)),
-                harDepositumskonto = jsonObject.getBoolean(harDepositumskontoKey),
-                depositumBeløp = jsonObject.optNullableNumber(depositumBeløpKey)
+                borIBolig = jsonObject.optNullableBoolean(borIBoligKey),
+                verdiPåBolig = jsonObject.optNullableNumber(verdiPåBoligKey),
+                boligBrukesTil = jsonObject.optNullableString(boligBrukesTilKey),
+                depositumsBeløp = jsonObject.optNullableNumber(depositumsBeløpKey),
+                Kontonummer = jsonObject.optNullableString(KontonummerKey),
+                verdiPåEiendom = jsonObject.optNullableNumber(verdiPåEiendomKey),
+                eiendomBrukesTil = jsonObject.optNullableString(eiendomBrukesTilKey),
+                verdiPåKjøretøy = jsonObject.optNullableNumber(verdiPåKjøretøyKey),
+                kjøretøyDeEier = jsonObject.optNullableString(kjøretøyDeEierKey),
+                innskuddsBeløp = jsonObject.optNullableNumber(innskuddsBeløpKey),
+                verdipapirBeløp = jsonObject.optNullableNumber(verdipapirBeløpKey),
+                skylderNoenMegPengerBeløp = jsonObject.optNullableNumber(skylderNoenMegPengerBeløpKey),
+                kontanterBeløp = jsonObject.optNullableNumber(kontanterBeløpKey)
         )
     }
 
     override fun toString() = toJson()
 }
-
-data class AnnenFormue(
-        val typeFormue: String,
-        val skattetakst: Double
-) : toJson<AnnenFormue> {
-    override fun toJson() = """
-        {
-            "$typeFormueKey": "$typeFormue",
-            "$skattetakstKey": $skattetakst
-        }
-    """.trimIndent()
-
-    companion object : fromJson<AnnenFormue> {
-        internal const val typeFormueKey = "typeFormue"
-        internal const val skattetakstKey = "skattetakst"
-        override fun fromJson(jsonObject: JSONObject) = AnnenFormue(
-                typeFormue = jsonObject.getString(typeFormueKey),
-                skattetakst = jsonObject.getDouble(skattetakstKey)
-        )
-    }
-
-    override fun toString() = toJson()
-}
-
 
 data class PensjonsOrdningBeløp(
         val ordning: String,
         val beløp: Double
-) : toJson<PensjonsOrdningBeløp> {
+) : ToJson<PensjonsOrdningBeløp> {
     override fun toJson() = """
         {
             "$ordningKey": "$ordning",
@@ -428,7 +498,7 @@ data class PensjonsOrdningBeløp(
         }
     """.trimIndent()
 
-    companion object : fromJson<PensjonsOrdningBeløp> {
+    companion object : FromJson<PensjonsOrdningBeløp> {
         internal const val ordningKey = "ordning"
         internal const val beløpKey = "beløp"
         override fun fromJson(jsonObject: JSONObject) = PensjonsOrdningBeløp(
@@ -440,7 +510,7 @@ data class PensjonsOrdningBeløp(
     override fun toString() = toJson()
 }
 
-fun <T : toJson<T>> List<T>.listToJson() = "[${this.joinToString(",") { it.toJson() }}]"
+fun <T : ToJson<T>> List<T>.listToJson() = "[${this.joinToString(",") { it.toJson() }}]"
 
 fun JSONObject.optNullableBoolean(key: String): Boolean? {
     return try {
@@ -458,27 +528,19 @@ fun JSONObject.optNullableNumber(key: String): Number? {
     }
 }
 
-fun <T> fromJson<T>.fromJsonArray(jsonArray: JSONArray?): List<T>? {
-    if (jsonArray == null) return null
-    var list = mutableListOf<T>()
-    for (i in 0 until jsonArray.count()) {
-        val jsonObject = jsonArray.getJSONObject(i)
-        list.add(fromJson(jsonObject))
+fun JSONObject.optNullableString(key: String): String? {
+    return try {
+        this.getString(key)
+    } catch (e: JSONException) {
+        null
     }
-    return list
 }
 
-fun localDateOrNull(any: String?): LocalDate? = when (getOrNull(any)) {
-    null -> null
-    else -> LocalDate.parse(any, ISO_DATE)
+fun <T> FromJson<T>.fromJsonArray(jsonArray: JSONArray?): List<T>? = jsonArray?.let { array ->
+    array.mapIndexed { index, _ -> fromJson(array.getJSONObject(index)) }
 }
 
-fun jsonStringOrNull(any: Any?): Any? = when (getOrNull(any)) {
+fun jsonStringOrNull(any: Any?): Any? = when (any) {
     null -> null
     else -> "\"$any\""
-}
-
-fun getOrNull(any: Any?): Any? = when (any) {
-    null -> null
-    else -> any
 }
