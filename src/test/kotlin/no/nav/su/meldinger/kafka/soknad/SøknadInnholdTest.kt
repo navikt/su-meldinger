@@ -5,12 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import org.json.JSONObject
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertDoesNotThrow
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SøknadInnholdTest {
@@ -31,18 +27,17 @@ internal class SøknadInnholdTest {
 
     @Test
     fun `should convert to and from json`() {
-        assertDoesNotThrow() {
-            JSONObject(søknad.toJson())
-            JsonParser.parseString(søknad.toJson()) //Strict check of json syntax - JSONObject helps us along a bit too much.
-        }
-        assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
+        val json = søknad.toJson()
+        JSONObject(json)
+        JsonParser.parseString(json) //Strict check of json syntax - JSONObject helps us along a bit too much.
+        SøknadInnhold.fromJson(JSONObject(json)).shouldBe(søknad)
     }
 
     @Test
     fun `should put " " if appropriate around conditional values`() {
         val personopplysninger = søknad.personopplysninger.toJson()
-        assertTrue(personopplysninger.contains("\"Erik\""))
-        assertTrue(personopplysninger.contains("\"U1H20\""))
+        personopplysninger.shouldContain("\"Erik\"")
+        personopplysninger.shouldContain("\"U1H20\"")
 
         val boforhold = søknad.boforhold.toJson()
         boforhold.shouldContain(""""ektemake-eller-samboer"""")
@@ -51,8 +46,8 @@ internal class SøknadInnholdTest {
         oppholdstillatelse.shouldContain(""""midlertidig"""")
 
         val utenlandsopphold = søknad.utenlandsopphold.toJson()
-        assertFalse(utenlandsopphold.contains("\"[\""))
-        assertFalse(utenlandsopphold.contains("\"]\""))
+        utenlandsopphold.shouldNotContain("\"[\"")
+        utenlandsopphold.shouldNotContain("\"]\"")
 
         val forNav = søknad.forNav.toJson()
         forNav.shouldContain(""""harFullmektigEllerVerge": "verge"""")
