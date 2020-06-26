@@ -1,7 +1,6 @@
 package no.nav.su.meldinger.kafka.soknad
 
 import com.google.gson.JsonParser
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -81,6 +80,101 @@ internal class SøknadInnholdTest {
                 forNav = ForNav()
         )
         val json = expectedSøknadInnhold.toJson()
+        JsonParser.parseString(json) //JSONObject is apparently not strict enough
+        SøknadInnhold.fromJson(JSONObject(json)).shouldBe(expectedSøknadInnhold)
+    }
+
+    @Test
+    fun `should deserialize minimal søknadsinnsending`() {
+
+        val expectedSøknadInnhold = SøknadInnhold(
+                uførevedtak = Uførevedtak(harUførevedtak = true),
+                personopplysninger = minimalPersonopplysninger.copy(
+                        bruksenhet = "102"
+                ),
+                flyktningsstatus = Flyktningsstatus(registrertFlyktning = true),
+                boforhold = Boforhold(borOgOppholderSegINorge = true, delerBolig = false),
+                utenlandsopphold = Utenlandsopphold(emptyList(), emptyList()),
+                oppholdstillatelse = Oppholdstillatelse(erNorskStatsborger = true, statsborgerskapAndreLand = false),
+                inntektOgPensjon = InntektOgPensjon(pensjon = emptyList()),
+                formue = Formue(),
+                forNav = ForNav()
+        )
+        //language=JSON
+        val json = """
+            {
+                "personopplysninger":{
+                    "aktørid":"123",
+                    "fnr":"12345678910",
+                    "fornavn":"fornavn",
+                    "mellomnavn":null,
+                    "etternavn":"etternavn",
+                    "telefonnummer":"12345678",
+                    "gateadresse":"gateadresse",
+                    "postnummer":"0050",
+                    "poststed":"Oslo",
+                    "bruksenhet":"102",
+                    "bokommune":"Oslo",
+                    "statsborgerskap":"NOR"
+                },
+                "uførevedtak":{
+                    "harUførevedtak":true
+                },
+                "flyktningsstatus":{
+                    "registrertFlyktning":true
+                },
+                "oppholdstillatelse":{
+                    "erNorskStatsborger":true,
+                    "harOppholdstillatelse":null,
+                    "typeOppholdstillatelse":null,
+                    "oppholdstillatelseMindreEnnTreMåneder":null,
+                    "oppholdstillatelseForlengelse":null,
+                    "statsborgerskapAndreLand":false,
+                    "statsborgerskapAndreLandFritekst":null
+                },
+                "boforhold":{
+                    "borOgOppholderSegINorge":true,
+                    "delerBoligMedVoksne":false,
+                    "delerBoligMed":null,
+                    "ektemakeEllerSamboerUnder67År":null,
+                    "ektemakeEllerSamboerUførFlyktning":null
+                },
+                "utenlandsopphold":{
+                    "registrertePerioder":[],
+                    "planlagtePerioder":[]
+                },
+                "inntektOgPensjon":{
+                    "forventetInntekt":null,
+                    "tjenerPengerIUtlandetBeløp":null,
+                    "andreYtelserINav":null,
+                    "andreYtelserINavBeløp":null,
+                    "søktAndreYtelserIkkeBehandletBegrunnelse":null,
+                    "sosialstønadBeløp":null,
+                    "trygdeytelserIUtlandetBeløp":null,
+                    "trygdeytelserIUtlandet":null,
+                    "trygdeytelserIUtlandetFra":null,
+                    "pensjon":[]
+                },
+                "formue":{
+                    "borIBolig":null,
+                    "verdiPåBolig":null,
+                    "boligBrukesTil":null,
+                    "depositumsBeløp":null,
+                    "kontonummer":null,
+                    "verdiPåEiendom":null,
+                    "eiendomBrukesTil":null,
+                    "verdiPåKjøretøy":null,
+                    "kjøretøyDeEier":null,
+                    "innskuddsBeløp":null,
+                    "verdipapirBeløp":null,
+                    "skylderNoenMegPengerBeløp":null,
+                    "kontanterBeløp":null
+                },
+                "forNav":{
+                    "harFullmektigEllerVerge":null
+                }
+            }
+        """.trimIndent()
         JsonParser.parseString(json) //JSONObject is apparently not strict enough
         SøknadInnhold.fromJson(JSONObject(json)).shouldBe(expectedSøknadInnhold)
     }
