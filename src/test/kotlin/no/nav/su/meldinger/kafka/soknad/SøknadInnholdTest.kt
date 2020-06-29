@@ -1,180 +1,176 @@
 package no.nav.su.meldinger.kafka.soknad
 
 import com.google.gson.JsonParser
-import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.borSammenMedKey
-import no.nav.su.meldinger.kafka.soknad.Boforhold.Companion.delerBoligMedKey
-import no.nav.su.meldinger.kafka.soknad.ForNav.Companion.merknaderKey
-import no.nav.su.meldinger.kafka.soknad.Formue.Companion.annenFormueKey
-import no.nav.su.meldinger.kafka.soknad.Formue.Companion.depositumBeløpKey
-import no.nav.su.meldinger.kafka.soknad.Formue.Companion.formueBeløpKey
-import no.nav.su.meldinger.kafka.soknad.InntektOgPensjon.Companion.framsattKravAnnenYtelseBegrunnelseKey
-import no.nav.su.meldinger.kafka.soknad.InntektOgPensjon.Companion.inntektBeløpKey
-import no.nav.su.meldinger.kafka.soknad.InntektOgPensjon.Companion.pensjonsOrdningKey
-import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.søktOmForlengelseKey
-import no.nav.su.meldinger.kafka.soknad.Oppholdstillatelse.Companion.utløpsDatoKey
-import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.bruksenhetKey
-import no.nav.su.meldinger.kafka.soknad.Personopplysninger.Companion.mellomnavnKey
-import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.planlagtePerioderKey
-import no.nav.su.meldinger.kafka.soknad.Utenlandsopphold.Companion.registrertePerioderKey
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.json.JSONObject
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SøknadInnholdTest {
 
     private val søknad = SøknadInnholdTestdataBuilder.build()
 
+    val minimalPersonopplysninger = Personopplysninger(
+            fnr = "12345678910",
+            fornavn = "fornavn",
+            etternavn = "etternavn",
+            telefonnummer = "12345678",
+            gateadresse = "gateadresse",
+            postnummer = "0050",
+            poststed = "Oslo",
+            bokommune = "Oslo",
+            statsborgerskap = "NOR"
+    )
+
     @Test
     fun `should convert to and from json`() {
-        assertDoesNotThrow() {
-            JSONObject(søknad.toJson())
-            JsonParser.parseString(søknad.toJson()) //Strict check of json syntax - JSONObject helps us along a bit too much.
-        }
-        assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
+        val json = søknad.toJson()
+        JSONObject(json)
+        JsonParser.parseString(json) //Strict check of json syntax - JSONObject helps us along a bit too much.
+        SøknadInnhold.fromJson(JSONObject(json)).shouldBe(søknad)
     }
 
     @Test
     fun `should put " " if appropriate around conditional values`() {
         val personopplysninger = søknad.personopplysninger.toJson()
-        assertTrue(personopplysninger.contains("\"Erik\""))
-        assertTrue(personopplysninger.contains("\"U1H20\""))
+        personopplysninger.shouldContain("\"Erik\"")
+        personopplysninger.shouldContain("\"U1H20\"")
 
         val boforhold = søknad.boforhold.toJson()
-        assertTrue(boforhold.contains("\"Kari Nordmann\""))
-        assertTrue(boforhold.contains("\"Ektefelle/Partner/Samboer\""))
-        assertTrue(boforhold.contains("\"Per Nordmann\""))
-        assertTrue(boforhold.contains("\"Andre personer over 18 år\""))
+        boforhold.shouldContain(""""ektemake-eller-samboer"""")
 
         val oppholdstillatelse = søknad.oppholdstillatelse.toJson()
-        assertTrue(oppholdstillatelse.contains("\"2020-12-31\""))
-        assertFalse(oppholdstillatelse.contains("\"true\""))
+        oppholdstillatelse.shouldContain(""""midlertidig"""")
 
         val utenlandsopphold = søknad.utenlandsopphold.toJson()
-        assertFalse(utenlandsopphold.contains("\"[\""))
-        assertFalse(utenlandsopphold.contains("\"]\""))
+        utenlandsopphold.shouldNotContain("\"[\"")
+        utenlandsopphold.shouldNotContain("\"]\"")
 
         val forNav = søknad.forNav.toJson()
-        assertTrue(forNav.contains("\"Intet å bemerke\""))
+        forNav.shouldContain(""""harFullmektigEllerVerge": "verge"""")
 
-        val formue = søknad.formue.toJson()
+        søknad.formue.toJson()
 
         val inntektOgPensjon = søknad.inntektOgPensjon.toJson()
-        assertTrue(inntektOgPensjon.contains("\"Har søkt om foreldrepenger\""))
-        assertFalse(inntektOgPensjon.contains("\"[\""))
-        assertFalse(inntektOgPensjon.contains("\"]\""))
+        inntektOgPensjon.shouldContain("\"sosialstønad\"")
+        inntektOgPensjon.shouldNotContain("\"[\"")
+        inntektOgPensjon.shouldNotContain("\"]\"")
     }
 
     @Test
-    fun `should handle optional values as null`() {
-        val jsonPersonopplysninger = JSONObject(Personopplysninger(
-                fnr = "12345678910",
-                fornavn = "fornavn",
-                etternavn = "etternavn",
-                telefonnummer = "12345678",
-                gateadresse = "gateadresse",
-                postnummer = "0050",
-                poststed = "Oslo",
-                bokommune = "Oslo",
-                statsborgerskap = "NOR"
-        ).toJson())
-        assertNull(jsonPersonopplysninger.optString(mellomnavnKey, null))
-        assertNull(jsonPersonopplysninger.optString(bruksenhetKey, null))
+    fun `should serialize and deserialize default values for SøknadInnhold`() {
 
-        val personopplysninger = Personopplysninger.fromJson(jsonPersonopplysninger)
-        assertNull(personopplysninger.mellomnavn)
-        assertNull(personopplysninger.bruksenhet)
+        val expectedSøknadInnhold = SøknadInnhold(
+                uførevedtak = Uførevedtak(harUførevedtak = true),
+                personopplysninger = minimalPersonopplysninger,
+                flyktningsstatus = Flyktningsstatus(registrertFlyktning = true),
+                boforhold = Boforhold(borOgOppholderSegINorge = false, delerBolig = false),
+                utenlandsopphold = Utenlandsopphold(),
+                oppholdstillatelse = Oppholdstillatelse(erNorskStatsborger = true, statsborgerskapAndreLand = false),
+                inntektOgPensjon = InntektOgPensjon(),
+                formue = Formue(),
+                forNav = ForNav()
+        )
+        val json = expectedSøknadInnhold.toJson()
+        JsonParser.parseString(json) //JSONObject is apparently not strict enough
+        SøknadInnhold.fromJson(JSONObject(json)).shouldBe(expectedSøknadInnhold)
+    }
 
-        val jsonFlyktningsstatus = JSONObject(Flyktningsstatus(
-                registrertFlyktning = false
-        ))
-        val flyktningsstatus = Flyktningsstatus.fromJson(jsonFlyktningsstatus)
+    @Test
+    fun `should deserialize minimal søknadsinnsending`() {
 
-
-        val jsonBoforhold = JSONObject(Boforhold(
-                delerBolig = false,
-                borFastINorge = false
-        ).toJson())
-        assertNull(jsonBoforhold.optString(borSammenMedKey, null))
-        assertNull(jsonBoforhold.optString(delerBoligMedKey, null))
-
-        val boforhold = Boforhold.fromJson(jsonBoforhold)
-        assertNull(boforhold.borSammenMed)
-        assertNull(boforhold.delerBoligMed)
-
-        val jsonOppholdstillatelse = JSONObject(Oppholdstillatelse(
-                harVarigOpphold = false
-        ).toJson())
-
-        assertNull(jsonOppholdstillatelse.optString(utløpsDatoKey, null))
-        assertNull(jsonOppholdstillatelse.optNullableBoolean(søktOmForlengelseKey))
-
-        val oppholdstillatelse = Oppholdstillatelse.fromJson(jsonOppholdstillatelse)
-        assertNull(oppholdstillatelse.utløpsDato)
-        assertNull(oppholdstillatelse.søktOmForlengelse)
-
-        val jsonUtenlandsopphold = JSONObject(Utenlandsopphold(
-        ).toJson())
-        assertNull(jsonUtenlandsopphold.optJSONArray(registrertePerioderKey))
-        assertNull(jsonUtenlandsopphold.optJSONArray(planlagtePerioderKey))
-
-        val utenlandsopphold = Utenlandsopphold.fromJson(jsonUtenlandsopphold)
-        assertNull(utenlandsopphold.registrertePerioder)
-        assertNull(utenlandsopphold.planlagtePerioder)
-
-        val jsonForNav = JSONObject(ForNav(
-                målform = "målform",
-                søkerMøttPersonlig = true,
-                harFullmektigMøtt = false,
-                erPassSjekket = true
-        ).toJson())
-        assertNull(jsonUtenlandsopphold.optString(merknaderKey, null))
-
-        val forNav = ForNav.fromJson(jsonForNav)
-        assertNull(forNav.merknader)
-
-
-        val jsonFormue = JSONObject(Formue(
-                harFormueEiendom = false,
-                harFinansformue = true,
-                harAnnenFormue = true,
-                harDepositumskonto = false
-        ).toJson())
-        assertNull(jsonFormue.optJSONArray(annenFormueKey))
-        assertNull(jsonFormue.optNullableNumber(formueBeløpKey))
-        assertNull(jsonFormue.optNullableNumber(depositumBeløpKey))
-
-        val formue = Formue.fromJson(jsonFormue)
-        assertNull(formue.annenFormue)
-        assertNull(formue.formueBeløp)
-        assertNull(formue.depositumBeløp)
-
-
-        val jsonInntektOgPensjon = JSONObject(InntektOgPensjon(
-                framsattKravAnnenYtelse = false,
-                framsattKravAnnenYtelseBegrunnelse = null,
-                harInntekt = false,
-                inntektBeløp = null,
-                harPensjon = false,
-                pensjonsOrdning = null,
-                sumInntektOgPensjon = 0,
-                harSosialStønad = false
-        ).toJson())
-        assertNull(jsonInntektOgPensjon.optJSONArray(framsattKravAnnenYtelseBegrunnelseKey))
-        assertNull(jsonInntektOgPensjon.optNullableNumber(inntektBeløpKey))
-        assertNull(jsonInntektOgPensjon.optJSONArray(pensjonsOrdningKey))
-
-        val inntektOgPensjon = InntektOgPensjon.fromJson(jsonInntektOgPensjon)
-        assertNull(inntektOgPensjon.framsattKravAnnenYtelseBegrunnelse)
-        assertNull(inntektOgPensjon.pensjonsOrdning)
-        assertNull(inntektOgPensjon.inntektBeløp)
-
-        val søknad = SøknadInnhold(personopplysninger, flyktningsstatus, boforhold, utenlandsopphold, oppholdstillatelse, inntektOgPensjon, formue, forNav)
-
-        assertDoesNotThrow {
-            JSONObject(søknad.toJson())
-            JsonParser.parseString(søknad.toJson()) //Strict check of json syntax - JSONObject helps us along a bit too much.
-        }
-        assertEquals(søknad.toJson(), SøknadInnhold.fromJson(JSONObject(søknad.toJson())).toJson())
+        val expectedSøknadInnhold = SøknadInnhold(
+                uførevedtak = Uførevedtak(harUførevedtak = true),
+                personopplysninger = minimalPersonopplysninger.copy(
+                        bruksenhet = "102"
+                ),
+                flyktningsstatus = Flyktningsstatus(registrertFlyktning = true),
+                boforhold = Boforhold(borOgOppholderSegINorge = true, delerBolig = false),
+                utenlandsopphold = Utenlandsopphold(emptyList(), emptyList()),
+                oppholdstillatelse = Oppholdstillatelse(erNorskStatsborger = true, statsborgerskapAndreLand = false),
+                inntektOgPensjon = InntektOgPensjon(pensjon = emptyList()),
+                formue = Formue(),
+                forNav = ForNav()
+        )
+        //language=JSON
+        val json = """
+            {
+                "personopplysninger":{
+                    "aktørid":"123",
+                    "fnr":"12345678910",
+                    "fornavn":"fornavn",
+                    "mellomnavn":null,
+                    "etternavn":"etternavn",
+                    "telefonnummer":"12345678",
+                    "gateadresse":"gateadresse",
+                    "postnummer":"0050",
+                    "poststed":"Oslo",
+                    "bruksenhet":"102",
+                    "bokommune":"Oslo",
+                    "statsborgerskap":"NOR"
+                },
+                "uførevedtak":{
+                    "harUførevedtak":true
+                },
+                "flyktningsstatus":{
+                    "registrertFlyktning":true
+                },
+                "oppholdstillatelse":{
+                    "erNorskStatsborger":true,
+                    "harOppholdstillatelse":null,
+                    "typeOppholdstillatelse":null,
+                    "oppholdstillatelseMindreEnnTreMåneder":null,
+                    "oppholdstillatelseForlengelse":null,
+                    "statsborgerskapAndreLand":false,
+                    "statsborgerskapAndreLandFritekst":null
+                },
+                "boforhold":{
+                    "borOgOppholderSegINorge":true,
+                    "delerBoligMedVoksne":false,
+                    "delerBoligMed":null,
+                    "ektemakeEllerSamboerUnder67År":null,
+                    "ektemakeEllerSamboerUførFlyktning":null
+                },
+                "utenlandsopphold":{
+                    "registrertePerioder":[],
+                    "planlagtePerioder":[]
+                },
+                "inntektOgPensjon":{
+                    "forventetInntekt":null,
+                    "tjenerPengerIUtlandetBeløp":null,
+                    "andreYtelserINav":null,
+                    "andreYtelserINavBeløp":null,
+                    "søktAndreYtelserIkkeBehandletBegrunnelse":null,
+                    "sosialstønadBeløp":null,
+                    "trygdeytelserIUtlandetBeløp":null,
+                    "trygdeytelserIUtlandet":null,
+                    "trygdeytelserIUtlandetFra":null,
+                    "pensjon":[]
+                },
+                "formue":{
+                    "borIBolig":null,
+                    "verdiPåBolig":null,
+                    "boligBrukesTil":null,
+                    "depositumsBeløp":null,
+                    "kontonummer":null,
+                    "verdiPåEiendom":null,
+                    "eiendomBrukesTil":null,
+                    "verdiPåKjøretøy":null,
+                    "kjøretøyDeEier":null,
+                    "innskuddsBeløp":null,
+                    "verdipapirBeløp":null,
+                    "skylderNoenMegPengerBeløp":null,
+                    "kontanterBeløp":null
+                },
+                "forNav":{
+                    "harFullmektigEllerVerge":null
+                }
+            }
+        """.trimIndent()
+        JsonParser.parseString(json) //JSONObject is apparently not strict enough
+        SøknadInnhold.fromJson(JSONObject(json)).shouldBe(expectedSøknadInnhold)
     }
 }

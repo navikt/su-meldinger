@@ -79,6 +79,7 @@ dependencies {
     testImplementation("no.nav:kafka-embedded-env:2.2.3")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.1.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 }
 
