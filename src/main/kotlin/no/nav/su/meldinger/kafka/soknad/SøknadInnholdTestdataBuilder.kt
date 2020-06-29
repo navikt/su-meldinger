@@ -8,6 +8,9 @@ import java.time.Month.FEBRUARY
 import java.time.Month.JANUARY
 import java.time.Month.JULY
 
+/**
+ * TODO John Andre Hestad: Det skal være mulig å bygge en testJar og importere denne fra gradle.
+ */
 class SøknadInnholdTestdataBuilder {
     companion object {
         fun personopplysninger(
